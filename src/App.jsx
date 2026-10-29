@@ -5,7 +5,19 @@ import { Login } from './components/Login'
 import { NovaSenha } from './components/NovaSenha'
 import { Painel } from './components/Painel'
 
+// Faixa laranja no topo quando o painel roda no ambiente de teste (VITE_AMBIENTE=teste).
+const EM_TESTE = import.meta.env.VITE_AMBIENTE === 'teste'
+
 export default function App() {
+  return (
+    <>
+      {EM_TESTE && <div className="faixa-teste" role="note">Ambiente de teste</div>}
+      <Telas />
+    </>
+  )
+}
+
+function Telas() {
   const [retorno] = useState(() => lerRetornoDoEmail())
   const [sessao, setSessao] = useState(sessaoAtual)
   const [acesso, setAcesso] = useState('verificando') // verificando | liberado | negado | erro

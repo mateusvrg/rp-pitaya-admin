@@ -464,3 +464,9 @@ th, td { padding: 8px 24px 8px 0; border-bottom: 1px solid var(--borda); }
 .linha-grafico__ponto { fill: var(--grafico); stroke: var(--superficie); stroke-width: 2.5; }
 .linha-grafico .dica { transform: translate(-50%, calc(-100% - 12px)); }
 .vazio-grafico { padding: 24px 0; }
+
+/* Faixa do ambiente de teste (só aparece com VITE_AMBIENTE=teste) */
+.faixa-teste { position: fixed; top: 0; left: 0; right: 0; height: 28px; z-index: 100; padding: 5px 16px; background: #B45309; color: #FFFFFF; font: 600 13px/1.4 system-ui, sans-serif; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body:has(.faixa-teste) { padding-top: 28px; }
+body:has(.faixa-teste) .lateral { top: 28px; }
+body:has(.faixa-teste) .barra-celular { top: 28px; }
