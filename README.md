@@ -6,8 +6,9 @@ do Supabase.
 
 ## O que tem
 
-- **Início:** reservas, pitaias reservadas, valor reservado e valor pago; gráficos por status,
-  por variedade e por dia (últimos 30 dias), com versão em tabela.
+- **Dashboard:** filtro de período (7 dias, mês, 3 meses, 6 meses, 1 ano); reservas, pitaias,
+  valor reservado e valor pago, com comparação ao período anterior; gráfico de linha por dia,
+  semana ou mês conforme o período; gráficos por status e por variedade; versão em tabela.
 - **Reservas:** lista compacta com detalhe ao lado, filtro por status, busca por nome ou telefone, troca de status,
   anotações, botão "Chamar no WhatsApp" com mensagem pronta e "Baixar planilha" (CSV para Excel).
 - **Variedades:** cadastrar, editar, mudar preço, marcar como disponível ou esgotada, esconder do

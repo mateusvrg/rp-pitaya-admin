@@ -6,7 +6,7 @@ const Svg = ({ children, tamanho = 20, ...resto }) => (
   </svg>
 )
 
-export const IconeInicio = (p) => <Svg {...p}><path d="M4 20V10l8-6 8 6v10" /><path d="M9.5 20v-5.5h5V20" /></Svg>
+export const IconeDashboard = (p) => <Svg {...p}><rect x="3.5" y="3.5" width="7" height="9" rx="1.8" /><rect x="13.5" y="3.5" width="7" height="5" rx="1.8" /><rect x="13.5" y="11.5" width="7" height="9" rx="1.8" /><rect x="3.5" y="15.5" width="7" height="5" rx="1.8" /></Svg>
 export const IconeReservas = (p) => <Svg {...p}><rect x="4" y="3.5" width="16" height="17" rx="2.5" /><path d="M8 8.5h8M8 12.5h8M8 16.5h5" /></Svg>
 export const IconeVariedades = (p) => <Svg {...p}><path d="M12 20c-4.4 0-7-3.1-7-7 0-4.1 3-7.5 7-7.5s7 3.4 7 7.5c0 3.9-2.6 7-7 7z" /><path d="M12 5.5c0-1.3.6-2.3 1.8-3" /><path d="M8 11.5l1.5 1M16 11.5l-1.5 1M12 15.5v1" /></Svg>
 export const IconeBusca = (p) => <Svg {...p}><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></Svg>

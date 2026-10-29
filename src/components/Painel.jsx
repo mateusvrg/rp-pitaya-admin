@@ -3,21 +3,21 @@ import logo from '../logo.svg'
 import { sair, sessaoAtual } from '../lib/supabase'
 import { listarProdutos, listarReservas } from '../lib/dados'
 import { aplicarTema, lerTema } from '../lib/tema'
-import { Inicio } from './Inicio'
+import { Dashboard } from './Dashboard'
 import { Reservas } from './Reservas'
 import { Variedades } from './Variedades'
-import { IconeAtualizar, IconeAuto, IconeInicio, IconeLua, IconeReservas, IconeSair, IconeSol, IconeVariedades } from './Icones'
+import { IconeAtualizar, IconeAuto, IconeDashboard, IconeLua, IconeReservas, IconeSair, IconeSol, IconeVariedades } from './Icones'
 
 const ABAS = [
-  { id: 'inicio', nome: 'Início', Icone: IconeInicio },
+  { id: 'dashboard', nome: 'Dashboard', Icone: IconeDashboard },
   { id: 'reservas', nome: 'Reservas', Icone: IconeReservas },
   { id: 'variedades', nome: 'Variedades', Icone: IconeVariedades },
 ]
 
-// Endereços: #/inicio, #/reservas, #/reservas/<id>, #/variedades
+// Endereços: #/dashboard, #/reservas, #/reservas/<id>, #/variedades
 function lerRota() {
   const [aba, id] = window.location.hash.replace(/^#\/?/, '').split('/')
-  return { aba: ABAS.some((a) => a.id === aba) ? aba : 'inicio', id: id || null }
+  return { aba: ABAS.some((a) => a.id === aba) ? aba : 'dashboard', id: id || null }
 }
 
 const TEMA_PROXIMO = { auto: 'claro', claro: 'escuro', escuro: 'auto' }
@@ -102,9 +102,9 @@ export function Painel() {
   return (
     <div className="painel">
       <aside className="lateral">
-        <a href="#/inicio" className="marca">
+        <a href="#/dashboard" className="marca">
           <img src={logo} alt="" width="28" height="28" />
-          <span>RP Pitaya</span>
+          <span className="marca__textos"><span>RP Pitaya</span><span className="marca__sub">Admin Console</span></span>
         </a>
         {navegacao('nav-lateral')}
         <div className="lateral__rodape">
@@ -119,7 +119,7 @@ export function Painel() {
       </aside>
 
       <header className="barra-celular">
-        <a href="#/inicio" className="marca"><img src={logo} alt="" width="26" height="26" /><span>{tituloAba}</span></a>
+        <a href="#/dashboard" className="marca"><img src={logo} alt="" width="26" height="26" /><span>{tituloAba}</span></a>
         <div className="barra-celular__acoes">
           <BotaoTema />
           <button type="button" className="botao-fantasma" onClick={sair} aria-label="Sair"><IconeSair /></button>
@@ -143,7 +143,7 @@ export function Painel() {
                 <span>Atualizado às {atualizadoEm?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
               </button>
             </div>
-            {rota.aba === 'inicio' && <Inicio reservas={reservas} produtos={produtos} irPara={irPara} />}
+            {rota.aba === 'dashboard' && <Dashboard reservas={reservas} produtos={produtos} irPara={irPara} />}
             {rota.aba === 'reservas' && (
               <Reservas key={filtroInicial ?? 'padrao'} reservas={reservas} filtroInicial={filtroInicial}
                 selecionada={rota.id} aoSelecionar={abrirReserva} aoAtualizar={trocarReserva} />
