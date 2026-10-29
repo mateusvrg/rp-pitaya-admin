@@ -1,10 +1,10 @@
 // Períodos do dashboard e como agrupar as reservas em cada um.
 export const PERIODOS = [
-  { id: '7d', nome: '7 dias', descricao: 'Últimos 7 dias', curto: '7d', agrupar: 'dia' },
-  { id: '30d', nome: 'Mês', descricao: 'Últimos 30 dias', curto: '30d', agrupar: 'dia' },
-  { id: '3m', nome: '3 meses', descricao: 'Últimos 3 meses', curto: '3m', agrupar: 'semana' },
-  { id: '6m', nome: '6 meses', descricao: 'Últimos 6 meses', curto: '6m', agrupar: 'semana' },
-  { id: '1a', nome: '1 ano', descricao: 'Últimos 12 meses', curto: '1a', agrupar: 'mes' },
+  { id: '7d', nome: '7 dias', descricao: 'Últimos 7 dias', anteriores: '7 dias anteriores', curto: '7d', agrupar: 'dia' },
+  { id: '30d', nome: 'Mês', descricao: 'Últimos 30 dias', anteriores: '30 dias anteriores', curto: '30d', agrupar: 'dia' },
+  { id: '3m', nome: '3 meses', descricao: 'Últimos 3 meses', anteriores: '3 meses anteriores', curto: '3m', agrupar: 'semana' },
+  { id: '6m', nome: '6 meses', descricao: 'Últimos 6 meses', anteriores: '6 meses anteriores', curto: '6m', agrupar: 'semana' },
+  { id: '1a', nome: '1 ano', descricao: 'Últimos 12 meses', anteriores: '12 meses anteriores', curto: '1a', agrupar: 'mes' },
 ]
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']

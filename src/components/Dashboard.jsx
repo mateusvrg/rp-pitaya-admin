@@ -6,13 +6,14 @@ import { GraficoLinha } from './GraficoLinha'
 
 const AGRUPAMENTO = { dia: 'por dia', semana: 'por semana', mes: 'por mês' }
 
-// Variação em relação ao período anterior, em texto.
-function variacao(atual, anterior) {
-  if (!anterior) return atual ? 'sem dados no período anterior' : null
+// Variação em relação ao período do mesmo tamanho logo antes, em texto.
+// Ex.: "-12% vs. 7 dias anteriores"
+function variacao(atual, anterior, anteriores) {
+  if (!anterior) return atual ? `sem dados nos ${anteriores}` : null
   const pct = Math.round(((atual - anterior) / anterior) * 100)
-  if (pct === 0) return 'igual ao período anterior'
-  if (pct > 999) return 'muito acima do período anterior'
-  return `${pct > 0 ? '+' : ''}${pct}% vs. período anterior`
+  if (pct === 0) return `igual aos ${anteriores}`
+  if (pct > 999) return `muito acima dos ${anteriores}`
+  return `${pct > 0 ? '+' : '−'}${Math.abs(pct)}% vs. ${anteriores}`
 }
 
 function Metrica({ rotulo, valor, detalhe, tendencia }) {
@@ -102,11 +103,11 @@ export function Dashboard({ reservas, produtos, irPara }) {
       periodo,
       pontos,
       totalValidas: atualValidas,
-      variacaoReservas: variacao(atualValidas, antValidas),
+      variacaoReservas: variacao(atualValidas, antValidas, periodo.anteriores),
       tendReservas: atualValidas > antValidas ? 'sobe' : atualValidas < antValidas ? 'desce' : null,
       unidades: validas(doPeriodo).reduce((s, r) => s + unidades(r), 0),
       valorReservado: atualValor,
-      variacaoValor: variacao(atualValor, antValor),
+      variacaoValor: variacao(atualValor, antValor, periodo.anteriores),
       tendValor: atualValor > antValor ? 'sobe' : atualValor < antValor ? 'desce' : null,
       valorPago: soma(pagas(doPeriodo)),
       qtdPagas: pagas(doPeriodo).length,
