@@ -56,8 +56,8 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
   const fotoAtual = previa || f.imagem_url
 
   return (
-    <form className="cartao form form-produto" onSubmit={aoEnviar} noValidate>
-      <h1 className="titulo">{novo ? 'Nova variedade' : `Editar ${produto.nome}`}</h1>
+    <form className="painel-form form" onSubmit={aoEnviar} noValidate>
+      <h2 className="painel-form__titulo">{novo ? 'Nova variedade' : `Editar ${produto.nome}`}</h2>
 
       <label className="campo-rotulo">Nome
         <input className="campo" value={f.nome} onChange={mudar('nome')} maxLength={60} placeholder="Ex.: Pitaia Amarela" />
@@ -83,10 +83,10 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
         <span>Foto</span>
         <div className="foto-escolha">
           {fotoAtual
-            ? <img src={fotoAtual} alt="Prévia da foto" className="produto__foto" />
-            : <div className="produto__foto produto__foto--vazia" aria-hidden="true">{novo ? 'Sem foto' : 'Foto do site'}</div>}
+            ? <img src={fotoAtual} alt="Prévia da foto" className="produto__foto produto__foto--grande" />
+            : <div className="produto__foto produto__foto--grande produto__foto--vazia" aria-hidden="true">{novo ? 'Sem foto' : 'Foto do site'}</div>}
           <div>
-            <label className="botao botao--contorno botao--pequeno">
+            <label className="botao botao--secundario">
               {fotoAtual ? 'Trocar foto' : 'Escolher foto'}
               <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only"
                 onChange={(e) => setFoto(e.target.files?.[0] ?? null)} />
@@ -101,7 +101,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
 
       {erro && <p className="erro" role="alert">{erro}</p>}
       <div className="form__botoes">
-        <button type="button" className="botao botao--contorno" onClick={aoCancelar} disabled={salvando}>Cancelar</button>
+        <button type="button" className="botao botao--secundario" onClick={aoCancelar} disabled={salvando}>Cancelar</button>
         <button type="submit" className="botao botao--principal" disabled={salvando}>{salvando ? 'Salvando...' : 'Salvar variedade'}</button>
       </div>
     </form>

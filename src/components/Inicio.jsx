@@ -6,10 +6,10 @@ const DIAS = 30
 
 function Indicador({ rotulo, valor, detalhe }) {
   return (
-    <div className="indicador">
-      <p className="indicador__rotulo">{rotulo}</p>
-      <p className="indicador__valor">{valor}</p>
-      {detalhe && <p className="indicador__detalhe">{detalhe}</p>}
+    <div className="metrica">
+      <p className="metrica__rotulo">{rotulo}</p>
+      <p className="metrica__valor">{valor}</p>
+      {detalhe && <p className="metrica__detalhe">{detalhe}</p>}
     </div>
   )
 }
@@ -143,10 +143,10 @@ export function Inicio({ reservas, produtos, irPara }) {
 
   if (reservas.length === 0) {
     return (
-      <div className="vazio">
-        <h2 className="titulo">Ainda não chegou nenhuma reserva</h2>
-        <p className="apoio">Assim que alguém reservar pelo site, ela aparece aqui. Confira se as variedades estão com preço e disponibilidade certos.</p>
-        <button type="button" className="botao botao--contorno" onClick={() => irPara('variedades')}>Ver variedades</button>
+      <div className="vazio vazio--grande">
+        <h2>Ainda não chegou nenhuma reserva</h2>
+        <p>Assim que alguém reservar pelo site, ela aparece aqui. Confira se as variedades estão com preço e disponibilidade certos.</p>
+        <button type="button" className="botao" onClick={() => irPara('variedades')}>Ver variedades</button>
       </div>
     )
   }
@@ -154,13 +154,14 @@ export function Inicio({ reservas, produtos, irPara }) {
   return (
     <div className="inicio">
       {dados.novas > 0 && (
-        <button type="button" className="faixa-novas" onClick={() => irPara('reservas', 'nova')}>
-          <strong>{dados.novas} {dados.novas === 1 ? 'reserva nova esperando contato' : 'reservas novas esperando contato'}</strong>
-          <span>Ver agora</span>
+        <button type="button" className="alerta" onClick={() => irPara('reservas', 'nova')}>
+          <span className="alerta__ponto" aria-hidden="true" />
+          <span className="alerta__texto">{dados.novas} {dados.novas === 1 ? 'reserva nova esperando contato' : 'reservas novas esperando contato'}</span>
+          <span className="alerta__acao">Ver</span>
         </button>
       )}
 
-      <section className="indicadores" aria-label="Resumo">
+      <section className="metricas" aria-label="Resumo">
         <Indicador rotulo="Reservas" valor={dados.totalValidas} detalhe={`${dados.ultimos7} nos últimos 7 dias`} />
         <Indicador rotulo="Pitaias reservadas" valor={dados.unidades} detalhe="unidades, sem as canceladas" />
         <Indicador rotulo="Valor reservado" valor={reais(dados.valorReservado)} detalhe="estimado, sem as canceladas" />
@@ -168,20 +169,20 @@ export function Inicio({ reservas, produtos, irPara }) {
       </section>
 
       <div className="graficos">
-        <section className="cartao grafico">
-          <h2 className="grafico__titulo">Reservas por status</h2>
+        <section className="bloco-grafico">
+          <h2>Reservas por status</h2>
           <p className="apoio">Toque em um status para ver as reservas.</p>
           <BarrasHorizontais linhas={dados.porStatus} aoClicar={(l) => irPara('reservas', l.id)} />
         </section>
 
-        <section className="cartao grafico">
-          <h2 className="grafico__titulo">Pitaias reservadas por variedade</h2>
+        <section className="bloco-grafico">
+          <h2>Pitaias por variedade</h2>
           <p className="apoio">Unidades, sem contar as reservas canceladas.</p>
           <BarrasHorizontais linhas={dados.porVariedade} formatar={(v) => `${v} un.`} />
         </section>
 
-        <section className="cartao grafico grafico--largo">
-          <h2 className="grafico__titulo">Reservas por dia</h2>
+        <section className="bloco-grafico bloco-grafico--largo">
+          <h2>Reservas por dia</h2>
           <p className="apoio">Últimos {DIAS} dias, todas as reservas recebidas.</p>
           <ColunasPorDia dias={dados.dias} />
           <Tabela cabecalho={['Dia', 'Reservas']}

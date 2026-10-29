@@ -13,10 +13,11 @@ do Supabase.
 - **Variedades:** cadastrar, editar, mudar preço, marcar como disponível ou esgotada, esconder do
   site e trocar a foto.
 - Login com e-mail e senha, "Esqueci minha senha" e atualização automática a cada minuto.
+- Menu lateral no computador e barra inferior no celular; tema claro, escuro ou automático.
 
 ## Tecnologias
 
-React 19 + Vite, CSS próprio. Conversa com o Supabase direto pela API REST (sem biblioteca extra).
+React 19 + Vite, CSS próprio com tema claro e escuro (fonte Geist). Conversa com o Supabase direto pela API REST (sem biblioteca extra).
 O banco, as regras de acesso e a função de reserva estão em `rp-pitaya-reservas/supabase/`.
 
 ## Publicar na Cloudflare Pages

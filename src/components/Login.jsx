@@ -27,9 +27,9 @@ export function Login() {
 
   return (
     <div className="tela-centro">
-      <div className="cartao cartao--estreito">
+      <div className="login">
         <div className="login__marca">
-          <img src={logo} alt="" width="48" height="48" />
+          <img src={logo} alt="" width="36" height="36" />
           <div>
             <p className="login__nome">RP Pitaya</p>
             <p className="apoio">Painel do produtor</p>
@@ -38,13 +38,13 @@ export function Login() {
 
         {modo === 'enviado' ? (
           <>
-            <h1 className="titulo">Confira seu e-mail</h1>
+            <h1 className="login__titulo">Confira seu e-mail</h1>
             <p className="apoio">Se esse e-mail estiver cadastrado, chega um link para criar uma senha nova. Pode levar alguns minutos.</p>
-            <button type="button" className="botao botao--contorno" onClick={() => setModo('entrar')}>Voltar para entrar</button>
+            <button type="button" className="botao botao--secundario" onClick={() => setModo('entrar')}>Voltar para entrar</button>
           </>
         ) : (
           <form className="form" onSubmit={aoEnviar} noValidate>
-            <h1 className="titulo">{modo === 'entrar' ? 'Entrar' : 'Criar senha nova'}</h1>
+            <h1 className="login__titulo">{modo === 'entrar' ? 'Entrar no painel' : 'Criar senha nova'}</h1>
             <label className="campo-rotulo">E-mail
               <input className="campo" type="email" autoComplete="username" value={email}
                 onChange={(e) => setEmail(e.target.value)} autoFocus />
@@ -59,7 +59,7 @@ export function Login() {
             <button type="submit" className="botao botao--principal" disabled={ocupado}>
               {ocupado ? 'Aguarde...' : modo === 'entrar' ? 'Entrar' : 'Enviar link por e-mail'}
             </button>
-            <button type="button" className="link-botao" onClick={() => { setErro(''); setModo(modo === 'entrar' ? 'esqueci' : 'entrar') }}>
+            <button type="button" className="link" onClick={() => { setErro(''); setModo(modo === 'entrar' ? 'esqueci' : 'entrar') }}>
               {modo === 'entrar' ? 'Esqueci minha senha' : 'Voltar para entrar'}
             </button>
           </form>

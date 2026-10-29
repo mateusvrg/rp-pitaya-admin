@@ -24,8 +24,8 @@ export function NovaSenha({ aoConcluir }) {
 
   return (
     <div className="tela-centro">
-      <form className="cartao cartao--estreito form" onSubmit={aoEnviar} noValidate>
-        <h1 className="titulo">Crie sua senha nova</h1>
+      <form className="login form" onSubmit={aoEnviar} noValidate>
+        <h1 className="login__titulo">Crie sua senha nova</h1>
         <label className="campo-rotulo">Senha nova
           <input className="campo" type="password" autoComplete="new-password" value={senha} onChange={(e) => setSenha(e.target.value)} autoFocus />
         </label>

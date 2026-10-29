@@ -30,19 +30,19 @@ export default function App() {
   if (trocandoSenha) return <NovaSenha aoConcluir={() => setTrocandoSenha(false)} />
 
   if (acesso === 'verificando') {
-    return <div className="tela-centro"><p className="carregando">Abrindo o painel...</p></div>
+    return <div className="tela-centro"><p className="estado"><span className="girando" aria-hidden="true" /> Abrindo o painel...</p></div>
   }
   if (acesso === 'negado' || acesso === 'erro') {
     return (
       <div className="tela-centro">
-        <div className="cartao cartao--estreito">
-          <h1 className="titulo">{acesso === 'negado' ? 'Esta conta não tem acesso' : 'Não foi possível abrir o painel'}</h1>
+        <div className="login">
+          <h1 className="login__titulo">{acesso === 'negado' ? 'Esta conta não tem acesso' : 'Não foi possível abrir o painel'}</h1>
           <p className="apoio">
             {acesso === 'negado'
               ? 'Você entrou, mas este e-mail não está na lista de administradores. Peça para incluírem você.'
               : 'Verifique sua internet e tente entrar de novo.'}
           </p>
-          <button type="button" className="botao botao--contorno" onClick={sair}>Sair</button>
+          <button type="button" className="botao botao--secundario" onClick={sair}>Sair</button>
         </div>
       </div>
     )

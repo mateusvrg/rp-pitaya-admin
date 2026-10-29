@@ -2,42 +2,60 @@ import { useCallback, useEffect, useState } from 'react'
 import logo from '../logo.svg'
 import { sair, sessaoAtual } from '../lib/supabase'
 import { listarProdutos, listarReservas } from '../lib/dados'
+import { aplicarTema, lerTema } from '../lib/tema'
 import { Inicio } from './Inicio'
 import { Reservas } from './Reservas'
 import { Variedades } from './Variedades'
+import { IconeAtualizar, IconeAuto, IconeInicio, IconeLua, IconeReservas, IconeSair, IconeSol, IconeVariedades } from './Icones'
 
 const ABAS = [
-  { id: 'inicio', nome: 'Início' },
-  { id: 'reservas', nome: 'Reservas' },
-  { id: 'variedades', nome: 'Variedades' },
+  { id: 'inicio', nome: 'Início', Icone: IconeInicio },
+  { id: 'reservas', nome: 'Reservas', Icone: IconeReservas },
+  { id: 'variedades', nome: 'Variedades', Icone: IconeVariedades },
 ]
 
-const abaDaUrl = () => {
-  const id = window.location.hash.replace('#/', '')
-  return ABAS.some((a) => a.id === id) ? id : 'inicio'
+// Endereços: #/inicio, #/reservas, #/reservas/<id>, #/variedades
+function lerRota() {
+  const [aba, id] = window.location.hash.replace(/^#\/?/, '').split('/')
+  return { aba: ABAS.some((a) => a.id === aba) ? aba : 'inicio', id: id || null }
+}
+
+const TEMA_PROXIMO = { auto: 'claro', claro: 'escuro', escuro: 'auto' }
+const TEMA_NOME = { auto: 'Tema automático', claro: 'Tema claro', escuro: 'Tema escuro' }
+const TEMA_ICONE = { auto: IconeAuto, claro: IconeSol, escuro: IconeLua }
+
+function BotaoTema({ comTexto }) {
+  const [tema, setTema] = useState(lerTema)
+  const Icone = TEMA_ICONE[tema]
+  const trocar = () => { const t = TEMA_PROXIMO[tema]; aplicarTema(t); setTema(t) }
+  return (
+    <button type="button" className="botao-fantasma" onClick={trocar} aria-label={`${TEMA_NOME[tema]}. Trocar tema`}>
+      <Icone /> {comTexto && <span>{TEMA_NOME[tema]}</span>}
+    </button>
+  )
 }
 
 export function Painel() {
-  const [aba, setAba] = useState(abaDaUrl)
+  const [rota, setRota] = useState(lerRota)
   const [reservas, setReservas] = useState([])
   const [produtos, setProdutos] = useState([])
-  const [status, setStatus] = useState('carregando') // carregando | pronto | erro
+  const [status, setStatus] = useState('carregando')
   const [atualizadoEm, setAtualizadoEm] = useState(null)
+  const [atualizando, setAtualizando] = useState(false)
   const [filtroInicial, setFiltroInicial] = useState(null)
 
   const carregar = useCallback(async () => {
+    setAtualizando(true)
     try {
       const [r, p] = await Promise.all([listarReservas(), listarProdutos()])
-      setReservas(r)
-      setProdutos(p)
-      setStatus('pronto')
-      setAtualizadoEm(new Date())
+      setReservas(r); setProdutos(p); setStatus('pronto'); setAtualizadoEm(new Date())
     } catch {
       setStatus((s) => (s === 'pronto' ? 'pronto' : 'erro'))
+    } finally {
+      setAtualizando(false)
     }
   }, [])
 
-  // Carrega ao abrir e atualiza sozinho a cada minuto enquanto o painel está visível.
   useEffect(() => {
     carregar()
     const t = setInterval(() => { if (document.visibilityState === 'visible') carregar() }, 60_000)
@@ -47,72 +65,95 @@ export function Painel() {
   }, [carregar])
 
   useEffect(() => {
-    const aoMudar = () => setAba(abaDaUrl())
+    const aoMudar = () => setRota(lerRota())
     window.addEventListener('hashchange', aoMudar)
     return () => window.removeEventListener('hashchange', aoMudar)
   }, [])
 
-  const irPara = (id, filtro = null) => {
+  const irPara = (aba, filtro = null) => {
     setFiltroInicial(filtro)
-    window.location.hash = `/${id}`
+    window.location.hash = `/${aba}`
     window.scrollTo({ top: 0 })
   }
+  const abrirReserva = (id) => { window.location.hash = id ? `/reservas/${id}` : '/reservas' }
 
-  const trocarReserva = (atualizada) =>
-    setReservas((lista) => lista.map((r) => (r.id === atualizada.id ? { ...r, ...atualizada } : r)))
-
-  const trocarProduto = (atualizado, novo = false) =>
-    setProdutos((lista) => (novo ? [...lista, atualizado] : lista.map((p) => (p.id === atualizado.id ? atualizado : p)))
+  const trocarReserva = (nova) => setReservas((l) => l.map((r) => (r.id === nova.id ? { ...r, ...nova } : r)))
+  const trocarProduto = (atual, novo = false) =>
+    setProdutos((l) => (novo ? [...l, atual] : l.map((p) => (p.id === atual.id ? atual : p)))
       .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome)))
 
   const novas = reservas.filter((r) => r.status === 'nova').length
+  const email = sessaoAtual()?.usuario?.email
+  const tituloAba = ABAS.find((a) => a.id === rota.aba)?.nome
+
+  const navegacao = (classe) => (
+    <nav className={classe} aria-label="Seções do painel">
+      {ABAS.map(({ id, nome, Icone }) => (
+        <a key={id} href={`#/${id}`} className="nav-item" aria-current={rota.aba === id ? 'page' : undefined}
+          onClick={() => setFiltroInicial(null)}>
+          <Icone />
+          <span>{nome}</span>
+          {id === 'reservas' && novas > 0 && <span className="contador" aria-label={`${novas} novas`}>{novas}</span>}
+        </a>
+      ))}
+    </nav>
+  )
 
   return (
     <div className="painel">
-      <header className="topo">
-        <div className="conteiner topo__linha">
-          <a href="#/inicio" className="marca">
-            <img src={logo} alt="" width="36" height="36" />
-            <span className="marca__nome">RP Pitaya</span>
-          </a>
-          <div className="topo__conta">
-            <span className="topo__email">{sessaoAtual()?.usuario?.email}</span>
-            <button type="button" className="botao botao--pequeno botao--contorno" onClick={sair}>Sair</button>
+      <aside className="lateral">
+        <a href="#/inicio" className="marca">
+          <img src={logo} alt="" width="28" height="28" />
+          <span>RP Pitaya</span>
+        </a>
+        {navegacao('nav-lateral')}
+        <div className="lateral__rodape">
+          <BotaoTema comTexto />
+          <div className="conta">
+            <span className="conta__email" title={email}>{email}</span>
+            <button type="button" className="botao-fantasma" onClick={sair} aria-label="Sair">
+              <IconeSair />
+            </button>
           </div>
         </div>
-        <nav className="conteiner abas" aria-label="Seções do painel">
-          {ABAS.map((a) => (
-            <a key={a.id} href={`#/${a.id}`} className="aba" aria-current={aba === a.id ? 'page' : undefined}
-              onClick={() => setFiltroInicial(null)}>
-              {a.nome}
-              {a.id === 'reservas' && novas > 0 && <span className="aba__contador" aria-label={`${novas} novas`}>{novas}</span>}
-            </a>
-          ))}
-        </nav>
+      </aside>
+
+      <header className="barra-celular">
+        <a href="#/inicio" className="marca"><img src={logo} alt="" width="26" height="26" /><span>{tituloAba}</span></a>
+        <div className="barra-celular__acoes">
+          <BotaoTema />
+          <button type="button" className="botao-fantasma" onClick={sair} aria-label="Sair"><IconeSair /></button>
+        </div>
       </header>
 
-      <main className="conteiner conteudo">
-        {status === 'carregando' && <p className="carregando">Carregando as reservas...</p>}
+      <main className="principal">
+        {status === 'carregando' && <div className="estado"><span className="girando" aria-hidden="true" /> Carregando...</div>}
         {status === 'erro' && (
-          <div className="aviso" role="alert">
+          <div className="estado" role="alert">
             <p>Não foi possível carregar os dados. Verifique sua internet.</p>
-            <button type="button" className="botao botao--contorno" onClick={carregar}>Tentar de novo</button>
+            <button type="button" className="botao" onClick={carregar}>Tentar de novo</button>
           </div>
         )}
         {status === 'pronto' && (
           <>
-            <div className="barra-atualizacao">
-              <span>Atualizado às {atualizadoEm?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-              <button type="button" className="link-botao" onClick={carregar}>Atualizar agora</button>
+            <div className="cabecalho">
+              <h1>{tituloAba}</h1>
+              <button type="button" className="atualizado" onClick={carregar} disabled={atualizando}>
+                <IconeAtualizar tamanho={16} className={atualizando ? 'gira' : ''} />
+                <span>Atualizado às {atualizadoEm?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+              </button>
             </div>
-            {aba === 'inicio' && <Inicio reservas={reservas} produtos={produtos} irPara={irPara} />}
-            {aba === 'reservas' && (
-              <Reservas key={filtroInicial ?? 'todas'} reservas={reservas} filtroInicial={filtroInicial} aoAtualizar={trocarReserva} />
+            {rota.aba === 'inicio' && <Inicio reservas={reservas} produtos={produtos} irPara={irPara} />}
+            {rota.aba === 'reservas' && (
+              <Reservas key={filtroInicial ?? 'padrao'} reservas={reservas} filtroInicial={filtroInicial}
+                selecionada={rota.id} aoSelecionar={abrirReserva} aoAtualizar={trocarReserva} />
             )}
-            {aba === 'variedades' && <Variedades produtos={produtos} reservas={reservas} aoSalvar={trocarProduto} />}
+            {rota.aba === 'variedades' && <Variedades produtos={produtos} reservas={reservas} aoSalvar={trocarProduto} />}
           </>
         )}
       </main>
+
+      {navegacao('nav-inferior')}
     </div>
   )
 }
