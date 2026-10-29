@@ -13,21 +13,48 @@ const inicioDoDia = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); retu
 const somarDias = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x }
 const inicioDaSemana = (d) => { const x = inicioDoDia(d); const dow = (x.getDay() + 6) % 7; return somarDias(x, -dow) } // segunda
 
-// Devolve { inicio, fim, anterior: { inicio, fim }, baldes: [{ inicio, fim, rotulo, rotuloLongo }] }
-export function montarPeriodo(id, agora = new Date()) {
-  const p = PERIODOS.find((x) => x.id === id) ?? PERIODOS[1]
+export const formatarData = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+const DIA_MS = 86_400_000
+export const diasEntre = (de, ate) => Math.round((inicioDoDia(ate) - inicioDoDia(de)) / DIA_MS) + 1
+
+// Período personalizado: agrupa por dia, semana ou mês conforme o tamanho.
+function periodoPersonalizado(de, ate) {
+  const dias = diasEntre(de, ate)
+  const agrupar = dias <= 45 ? 'dia' : dias <= 200 ? 'semana' : 'mes'
+  const mesmoDia = dias === 1
+  return {
+    id: 'custom',
+    nome: 'Personalizado',
+    descricao: mesmoDia ? `Dia ${formatarData(de)}` : `De ${formatarData(de)} a ${formatarData(ate)}`,
+    anteriores: dias === 1 ? 'dia anterior' : `${dias} dias anteriores`,
+    agrupar,
+  }
+}
+
+// Devolve { periodo, inicio, fim, anterior: { inicio, fim }, baldes: [{ inicio, fim, rotulo, rotuloLongo }] }
+// Para id 'custom', passe { de, ate } (datas, ate incluído).
+export function montarPeriodo(id, agora = new Date(), personalizado = null) {
   const hoje = inicioDoDia(agora)
   const amanha = somarDias(hoje, 1)
+  let p
   let inicio
-  if (p.id === '7d') inicio = somarDias(hoje, -6)
-  else if (p.id === '30d') inicio = somarDias(hoje, -29)
-  else if (p.id === '3m') inicio = inicioDaSemana(somarDias(hoje, -7 * 12))
-  else if (p.id === '6m') inicio = inicioDaSemana(somarDias(hoje, -7 * 25))
-  else inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1)
+  let fimPeriodo = amanha
+  if (id === 'custom' && personalizado?.de && personalizado?.ate) {
+    p = periodoPersonalizado(personalizado.de, personalizado.ate)
+    inicio = inicioDoDia(personalizado.de)
+    fimPeriodo = somarDias(inicioDoDia(personalizado.ate), 1)
+  } else {
+    p = PERIODOS.find((x) => x.id === id) ?? PERIODOS[1]
+    if (p.id === '7d') inicio = somarDias(hoje, -6)
+    else if (p.id === '30d') inicio = somarDias(hoje, -29)
+    else if (p.id === '3m') inicio = inicioDaSemana(somarDias(hoje, -7 * 12))
+    else if (p.id === '6m') inicio = inicioDaSemana(somarDias(hoje, -7 * 25))
+    else inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1)
+  }
 
   const baldes = []
   let cursor = inicio
-  while (cursor < amanha) {
+  while (cursor < fimPeriodo) {
     let fim
     let rotulo
     let rotuloLongo
@@ -44,20 +71,30 @@ export function montarPeriodo(id, agora = new Date()) {
       rotulo = cursor.getMonth() === 0 ? `${MESES[0]} ${String(cursor.getFullYear()).slice(2)}` : MESES[cursor.getMonth()]
       rotuloLongo = cursor.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
     }
-    baldes.push({ inicio: cursor, fim: fim > amanha ? amanha : fim, rotulo, rotuloLongo })
+    baldes.push({ inicio: cursor, fim: fim > fimPeriodo ? fimPeriodo : fim, rotulo, rotuloLongo })
     cursor = fim
   }
 
-  const duracao = amanha - inicio
+  const dias = diasEntre(inicio, somarDias(fimPeriodo, -1))
   return {
     periodo: p,
     inicio,
-    fim: amanha,
-    anterior: { inicio: new Date(inicio - duracao), fim: inicio },
+    fim: fimPeriodo,
+    anterior: { inicio: somarDias(inicio, -dias), fim: inicio },
     baldes,
   }
 }
 
+// Guarda a escolha: um id da lista ou 'custom' com as datas.
 const CHAVE = 'rp-admin-periodo'
-export const lerPeriodo = () => { try { return PERIODOS.some((p) => p.id === localStorage.getItem(CHAVE)) ? localStorage.getItem(CHAVE) : '30d' } catch { return '30d' } }
-export const salvarPeriodo = (id) => { try { localStorage.setItem(CHAVE, id) } catch { /* sem armazenamento */ } }
+export function lerPeriodo() {
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CHAVE))
+    if (salvo?.id === 'custom' && salvo.de && salvo.ate) return { id: 'custom', de: new Date(salvo.de), ate: new Date(salvo.ate) }
+    if (PERIODOS.some((p) => p.id === salvo?.id)) return { id: salvo.id }
+  } catch { /* valor antigo ou sem armazenamento */ }
+  return { id: '30d' }
+}
+export function salvarPeriodo(escolha) {
+  try { localStorage.setItem(CHAVE, JSON.stringify(escolha)) } catch { /* sem armazenamento */ }
+}

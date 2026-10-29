@@ -3,6 +3,8 @@ import { STATUS } from '../lib/dados'
 import { reais, unidades } from '../lib/formato'
 import { PERIODOS, lerPeriodo, montarPeriodo, salvarPeriodo } from '../lib/periodos'
 import { GraficoLinha } from './GraficoLinha'
+import { Calendario } from './Calendario'
+import { IconeCalendario } from './Icones'
 
 const AGRUPAMENTO = { dia: 'por dia', semana: 'por semana', mes: 'por mês' }
 
@@ -67,11 +69,13 @@ function Tabela({ cabecalho, linhas }) {
 }
 
 export function Dashboard({ reservas, produtos, irPara }) {
-  const [periodoId, setPeriodoId] = useState(lerPeriodo)
-  const escolher = (id) => { setPeriodoId(id); salvarPeriodo(id) }
+  const [escolha, setEscolha] = useState(lerPeriodo)
+  const [calendarioAberto, setCalendarioAberto] = useState(false)
+  const escolher = (nova) => { setEscolha(nova); salvarPeriodo(nova); setCalendarioAberto(false) }
+  const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 
   const dados = useMemo(() => {
-    const { periodo, inicio, fim, anterior, baldes } = montarPeriodo(periodoId)
+    const { periodo, inicio, fim, anterior, baldes } = montarPeriodo(escolha.id, new Date(), escolha)
     const naJanela = (r, de, ate) => { const t = new Date(r.criado_em); return t >= de && t < ate }
     const doPeriodo = reservas.filter((r) => naJanela(r, inicio, fim))
     const doAnterior = reservas.filter((r) => naJanela(r, anterior.inicio, anterior.fim))
@@ -115,7 +119,7 @@ export function Dashboard({ reservas, produtos, irPara }) {
       porVariedade,
       vazio: doPeriodo.length === 0,
     }
-  }, [reservas, produtos, periodoId])
+  }, [reservas, produtos, escolha])
 
   const novas = reservas.filter((r) => r.status === 'nova').length
 
@@ -139,12 +143,24 @@ export function Dashboard({ reservas, produtos, irPara }) {
         </button>
       )}
 
-      <div className="periodos" role="group" aria-label="Período do dashboard">
-        {PERIODOS.map((p) => (
-          <button key={p.id} type="button" className="segmento" aria-pressed={periodoId === p.id} onClick={() => escolher(p.id)}>
-            {p.nome}
+      <div className="periodos-area">
+        <div className="periodos" role="group" aria-label="Período do dashboard">
+          {PERIODOS.map((p) => (
+            <button key={p.id} type="button" className="segmento" aria-pressed={escolha.id === p.id} onClick={() => escolher({ id: p.id })}>
+              {p.nome}
+            </button>
+          ))}
+          <button type="button" className="segmento segmento--calendario" aria-pressed={escolha.id === 'custom'}
+            aria-expanded={calendarioAberto} onClick={() => setCalendarioAberto((a) => !a)}>
+            <IconeCalendario tamanho={16} />
+            <span>{escolha.id === 'custom' ? `${curta(escolha.de)} – ${curta(escolha.ate)}` : 'Personalizado'}</span>
           </button>
-        ))}
+        </div>
+        {calendarioAberto && (
+          <Calendario inicial={escolha.id === 'custom' ? escolha : null}
+            aoFechar={() => setCalendarioAberto(false)}
+            aoAplicar={({ de, ate }) => escolher({ id: 'custom', de, ate })} />
+        )}
       </div>
 
       <section className="metricas" aria-label={`Resumo: ${dados.periodo.nome}`}>
