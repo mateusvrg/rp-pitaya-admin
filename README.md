@@ -8,7 +8,7 @@ do Supabase.
 
 - **Início:** reservas, pitaias reservadas, valor reservado e valor pago; gráficos por status,
   por variedade e por dia (últimos 30 dias), com versão em tabela.
-- **Reservas:** cartões com filtro por status, busca por nome ou telefone, troca de status,
+- **Reservas:** lista compacta com detalhe ao lado, filtro por status, busca por nome ou telefone, troca de status,
   anotações, botão "Chamar no WhatsApp" com mensagem pronta e "Baixar planilha" (CSV para Excel).
 - **Variedades:** cadastrar, editar, mudar preço, marcar como disponível ou esgotada, esconder do
   site e trocar a foto.
