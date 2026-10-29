@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="chama-e" x1="1" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#D2457F"/><stop offset=".58" stop-color="#D2457F"/>
+      <stop offset=".58" stop-color="#7FA36A"/><stop offset="1" stop-color="#7FA36A"/>
+    </linearGradient>
+    <linearGradient id="chama-d" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#D2457F"/><stop offset=".58" stop-color="#D2457F"/>
+      <stop offset=".58" stop-color="#7FA36A"/><stop offset="1" stop-color="#7FA36A"/>
+    </linearGradient>
+  </defs>
+  <!-- folhas do topo -->
+  <path d="M28.5 15 C28 9 30 4.5 32 2 C34 4.5 36 9 35.5 15 Z" fill="#2F4A37"/>
+  <path d="M24 17 C21 12 17 9 12 8 C14 12 17.5 16 21 19 Z" fill="#4C6B52"/>
+  <path d="M40 17 C43 12 47 9 52 8 C50 12 46.5 16 43 19 Z" fill="#4C6B52"/>
+  <!-- corpo -->
+  <ellipse cx="32" cy="38" rx="19" ry="22" fill="#A8154F"/>
+  <!-- chamas que saem da casca -->
+  <path d="M22 33 C17 31 11 27 6 21 C13 22 19 25 24 29 Z" fill="url(#chama-e)"/>
+  <path d="M42 33 C47 31 53 27 58 21 C51 22 45 25 40 29 Z" fill="url(#chama-d)"/>
+  <path d="M19 47 C14 46 8 43 3 38 C10 38 16 40 21 43 Z" fill="url(#chama-e)"/>
+  <path d="M45 47 C50 46 56 43 61 38 C54 38 48 40 43 43 Z" fill="url(#chama-d)"/>
+  <path d="M29.5 26 C29.5 22 30.8 18.5 32 16 C33.2 18.5 34.5 22 34.5 26 Z" fill="#D2457F"/>
+  <path d="M30.6 19.5 C31 18.2 31.5 17 32 16 C32.5 17 33 18.2 33.4 19.5 Z" fill="#7FA36A"/>
+  <path d="M27 41 C26 37 26.5 34 28 31 C30 34 30.5 37 29.5 41 Z" fill="#C42C68"/>
+  <path d="M34.5 41 C33.5 37 34 34 36 31 C37.5 34 38 37 37 41 Z" fill="#C42C68"/>
+  <path d="M30.5 55 C29.5 51 30 48 32 45 C34 48 34.5 51 33.5 55 Z" fill="#C42C68"/>
+</svg>
