@@ -6,7 +6,7 @@ do Supabase.
 
 ## O que tem
 
-- **Dashboard:** filtro de período (7 dias, mês, 3 meses, 6 meses, 1 ano ou personalizado pelo calendário); reservas, pitaias,
+- **Dashboard:** filtro de período (7 dias, mês, 3 meses, 6 meses, 1 ano ou personalizado pelo calendário); reservas, pitayas,
   valor reservado e valor pago, com comparação ao período anterior; gráfico de linha por dia,
   semana ou mês conforme o período; gráficos por status e por variedade; versão em tabela.
 - **Reservas:** lista compacta com detalhe ao lado, filtro por status, busca por nome ou telefone, troca de status,

@@ -60,7 +60,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
       <h2 className="painel-form__titulo">{novo ? 'Nova variedade' : `Editar ${produto.nome}`}</h2>
 
       <label className="campo-rotulo">Nome
-        <input className="campo" value={f.nome} onChange={mudar('nome')} maxLength={60} placeholder="Ex.: Pitaia Amarela" />
+        <input className="campo" value={f.nome} onChange={mudar('nome')} maxLength={60} placeholder="Ex.: Pitaya Amarela" />
       </label>
 
       <div className="duas-colunas">
