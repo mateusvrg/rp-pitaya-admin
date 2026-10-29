@@ -43,3 +43,11 @@ Isso faz o link de "Esqueci minha senha" voltar para o painel.
 npm install
 npm run dev
 ```
+
+## Ambiente de teste
+
+- A branch `teste` é publicada pela Cloudflare em `teste.rp-pitaya-admin.pages.dev` (endereço próprio: `teste-admin.rppitaya.com.br`).
+- Toda mudança vai primeiro para `teste`; depois de aprovada, entra na `main` (site oficial).
+- O teste usa um **projeto separado no Supabase**. Na Cloudflare, em *Settings → Variables and Secrets*,
+  o ambiente **Preview** tem `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (do projeto de teste)
+  e `VITE_AMBIENTE` = `teste`, que mostra a faixa laranja "Ambiente de teste".
