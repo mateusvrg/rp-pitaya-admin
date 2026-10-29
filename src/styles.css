@@ -14,14 +14,14 @@
   --destaque-hover: #8E1043;
   --destaque-texto: #FFFFFF;
   --destaque-suave: #FBEAF0;
-  --grafico: #52525B;
-  --grafico-ativo: #18181B;
+  --grafico: #A8154F;
+  --grafico-ativo: #7A0F39;
   --erro: #B42335;
   --ok: #15803D;
-  --st-nova: #A8154F;
-  --st-contato: #B45309;
-  --st-paga: #15803D;
-  --st-entregue: #71717A;
+  --st-nova: #2a78d6;
+  --st-em_contato: #eb6834;
+  --st-paga: #1baf7a;
+  --st-entregue: #6250d6;
   --st-cancelada: #A1A1AA;
   --sombra: 0 1px 2px rgba(0, 0, 0, .04), 0 4px 16px rgba(0, 0, 0, .04);
   --raio: 10px;
@@ -44,14 +44,14 @@
     --destaque: #D63A73;
     --destaque-hover: #E5568A;
     --destaque-suave: rgba(214, 58, 115, .14);
-    --grafico: #A1A1AA;
-    --grafico-ativo: #F4F4F5;
+    --grafico: #E5568A;
+    --grafico-ativo: #F48FB4;
     --erro: #F87171;
     --ok: #4ADE80;
-    --st-nova: #E5568A;
-    --st-contato: #F59E0B;
-    --st-paga: #4ADE80;
-    --st-entregue: #A1A1AA;
+    --st-nova: #3987e5;
+    --st-em_contato: #d95926;
+    --st-paga: #199e70;
+    --st-entregue: #9085e9;
     --st-cancelada: #5F5F68;
     --sombra: none;
   }
@@ -70,14 +70,14 @@
   --destaque: #D63A73;
   --destaque-hover: #E5568A;
   --destaque-suave: rgba(214, 58, 115, .14);
-  --grafico: #A1A1AA;
-  --grafico-ativo: #F4F4F5;
+  --grafico: #E5568A;
+  --grafico-ativo: #F48FB4;
   --erro: #F87171;
   --ok: #4ADE80;
-  --st-nova: #E5568A;
-  --st-contato: #F59E0B;
-  --st-paga: #4ADE80;
-  --st-entregue: #A1A1AA;
+  --st-nova: #3987e5;
+  --st-em_contato: #d95926;
+  --st-paga: #199e70;
+  --st-entregue: #9085e9;
   --st-cancelada: #5F5F68;
   --sombra: none;
 }
@@ -252,7 +252,7 @@ textarea.campo { resize: vertical; }
 .barras__nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .barras__trilho { display: block; height: 8px; border-radius: 4px; background: var(--superficie-2); overflow: hidden; }
 .barras__barra { display: block; height: 100%; border-radius: 4px; background: var(--grafico); }
-.barras__linha--botao:hover .barras__barra { background: var(--grafico-ativo); }
+.barras__linha--botao:hover .barras__barra { filter: brightness(.85); }
 .barras__valor { text-align: right; font-weight: 500; color: var(--texto); }
 
 .colunas { position: relative; margin-top: 12px; max-width: 900px; }
@@ -315,7 +315,7 @@ th, td { padding: 8px 24px 8px 0; border-bottom: 1px solid var(--borda); }
 .selo { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--texto-2); white-space: nowrap; }
 .selo__ponto { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .selo--nova .selo__ponto { background: var(--st-nova); }
-.selo--em_contato .selo__ponto { background: var(--st-contato); }
+.selo--em_contato .selo__ponto { background: var(--st-em_contato); }
 .selo--paga .selo__ponto { background: var(--st-paga); }
 .selo--entregue .selo__ponto { background: var(--st-entregue); }
 .selo--cancelada .selo__ponto { background: var(--st-cancelada); }

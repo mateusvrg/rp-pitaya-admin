@@ -24,7 +24,7 @@ function BarrasHorizontais({ linhas, formatar = (v) => v, aoClicar }) {
           <>
             <span className="barras__nome">{l.nome}</span>
             <span className="barras__trilho">
-              <span className="barras__barra" style={{ width: l.valor ? `max(6px, ${(l.valor / maximo) * 100}%)` : 0 }} />
+              <span className="barras__barra" style={{ width: l.valor ? `max(6px, ${(l.valor / maximo) * 100}%)` : 0, ...(l.cor ? { background: l.cor } : {}) }} />
             </span>
             <span className="barras__valor">{formatar(l.valor)}</span>
           </>
@@ -109,7 +109,7 @@ export function Inicio({ reservas, produtos, irPara }) {
     const validas = reservas.filter((r) => r.status !== 'cancelada')
     const pagas = reservas.filter((r) => r.status === 'paga' || r.status === 'entregue')
 
-    const porStatus = STATUS.map((s) => ({ id: s.id, nome: s.plural, valor: reservas.filter((r) => r.status === s.id).length }))
+    const porStatus = STATUS.map((s) => ({ id: s.id, nome: s.plural, cor: `var(--st-${s.id})`, valor: reservas.filter((r) => r.status === s.id).length }))
 
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
     const dias = Array.from({ length: DIAS }, (_, i) => {
