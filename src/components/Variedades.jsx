@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { fotoDe, reais, semAcento } from '../lib/formato'
 import { AcoesVariedades } from './AcoesVariedades'
 import { DetalheVariedade } from './DetalheVariedade'
+import { FiltroCelular } from './FiltroCelular'
 import { FormProduto } from './FormProduto'
 import { IconeBusca, IconeFoto, IconeMais, IconeVariedades } from './Icones'
 
@@ -130,7 +131,8 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
           </button>
         </div>
 
-        <div className="segmentos" role="group" aria-label="Filtrar variedades">
+        <FiltroCelular titulo="Filtrar variedades" opcoes={FILTROS.map((f) => ({ ...f, qtd: contagem[f.id] }))} valor={filtro} aoEscolher={setFiltro} />
+        <div className="segmentos segmentos--filtros" role="group" aria-label="Filtrar variedades">
           {FILTROS.map((f) => (
             <button key={f.id} type="button" className="segmento" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>
               {f.nome}<span className="segmento__qtd">{contagem[f.id]}</span>

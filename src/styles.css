@@ -569,3 +569,37 @@ body:has(.faixa-teste) .barra-celular { top: 28px; }
 }
 .linha--variedade .linha__resumo { white-space: normal; }
 @media (max-width: 640px) { .filtro-periodo .calendario { left: 8px; right: 8px; width: auto; } }
+
+/* ===== Filtros no celular: botão "Filtros" + lista por cima da tela ===== */
+.filtro-celular { display: none; }
+.folha-filtros {
+  width: min(360px, calc(100% - 32px)); padding: 0; border: 1px solid var(--borda-forte); border-radius: 14px;
+  background: var(--superficie); color: var(--texto); box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
+}
+.folha-filtros::backdrop { background: rgba(0, 0, 0, .45); }
+.folha-filtros__caixa { padding: 8px 12px 14px; }
+.folha-filtros__topo { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 8px 6px; }
+.folha-filtros__topo h2 { font-size: 16px; font-weight: 600; }
+.folha-filtros__opcoes { display: flex; flex-direction: column; gap: 6px; }
+.folha-filtros__opcao {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 16px;
+  border: 1px solid var(--borda); border-radius: 10px; background: var(--superficie); color: var(--texto);
+  font: 500 15px var(--fonte); cursor: pointer; position: relative;
+}
+.folha-filtros__opcao[aria-pressed="true"] { background: var(--superficie-2); border-color: var(--texto); }
+.folha-filtros__opcao[aria-pressed="true"]::before {
+  content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: var(--destaque);
+}
+@media (max-width: 640px) {
+  .segmentos--filtros { display: none; }
+  .filtro-celular {
+    display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; cursor: pointer;
+    border: 1px solid var(--borda-forte); border-radius: 9px; background: var(--superficie); color: var(--texto);
+    font: 500 14px var(--fonte);
+  }
+  .filtro-celular__atual { display: inline-flex; align-items: center; gap: 6px; padding-left: 8px; border-left: 1px solid var(--borda); color: var(--texto-2); }
+  .filtros-linha { align-items: center; }
+  .filtro-periodo .segmentos { padding: 0; background: none; }
+  .filtro-periodo .segmento--calendario { min-height: 40px; border: 1px solid var(--borda-forte); background: var(--superficie); border-radius: 9px; }
+  .filtro-periodo .segmento--calendario[aria-pressed="true"] { box-shadow: none; }
+}

@@ -5,6 +5,7 @@ import { dataHora, reais, resumoItens, semAcento } from '../lib/formato'
 import { DetalheReserva } from './DetalheReserva'
 import { AcoesEmMassa } from './AcoesEmMassa'
 import { Calendario } from './Calendario'
+import { FiltroCelular } from './FiltroCelular'
 import { IconeBaixar, IconeBusca, IconeCalendario, IconeFechar, IconeReservas } from './Icones'
 
 // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
@@ -125,7 +126,8 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
         </div>
 
         <div className="filtros-linha">
-          <div className="segmentos" role="group" aria-label="Filtrar por status">
+          <FiltroCelular titulo="Filtrar reservas" opcoes={filtros} valor={filtro} aoEscolher={setFiltro} />
+          <div className="segmentos segmentos--filtros" role="group" aria-label="Filtrar por status">
             {filtros.map((f) => (
               <button key={f.id} type="button" className="segmento" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>
                 {f.nome}<span className="segmento__qtd">{f.qtd}</span>
