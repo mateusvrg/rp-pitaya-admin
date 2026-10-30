@@ -72,7 +72,8 @@ export function Dashboard({ reservas, produtos, irPara }) {
   const [escolha, setEscolha] = useState(lerPeriodo)
   const [calendarioAberto, setCalendarioAberto] = useState(false)
   const escolher = (nova) => { setEscolha(nova); salvarPeriodo(nova); setCalendarioAberto(false) }
-  const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
+const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...(d.getFullYear() !== new Date().getFullYear() && { year: '2-digit' }) })
 
   const dados = useMemo(() => {
     const { periodo, inicio, fim, anterior, baldes } = montarPeriodo(escolha.id, new Date(), escolha)

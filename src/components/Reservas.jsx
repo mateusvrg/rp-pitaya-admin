@@ -7,7 +7,8 @@ import { AcoesEmMassa } from './AcoesEmMassa'
 import { Calendario } from './Calendario'
 import { IconeBaixar, IconeBusca, IconeCalendario, IconeFechar, IconeReservas } from './Icones'
 
-const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+// Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
+const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...(d.getFullYear() !== new Date().getFullYear() && { year: '2-digit' }) })
 
 export function Selo({ status }) {
   return <span className={`selo selo--${status}`}><span className="selo__ponto" aria-hidden="true" />{nomeStatus(status)}</span>
