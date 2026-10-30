@@ -653,10 +653,26 @@ body:has(.faixa-teste) { --topo-fixo: 28px; }
 @media (max-width: 640px) {
   .barra-filtros { margin: -8px -16px 0; padding: 8px 16px; }
   .barra-filtros > .ferramentas { flex-wrap: nowrap; }
-  /* Rolou a lista: só a busca + setinha; a setinha mostra de novo os filtros, o período e a planilha */
-  .barra-filtros--presa .filtro-seta { display: inline-flex; }
-  .barra-filtros--presa:not(.barra-filtros--aberta) .filtros-linha { display: none; }
-  .barra-filtros--aberta .filtros-linha { animation: filtro-entra .16s ease-out; }
+  /* Rolou a lista: só a busca + setinha; a setinha mostra de novo os filtros, o período e a planilha.
+     Tudo com transição: a linha de filtros recolhe/abre e a setinha entra deslizando. */
+  .barra-filtros .filtros-linha {
+    max-height: 64px; opacity: 1; transform: none;
+    transition: max-height .28s ease, opacity .2s ease, transform .28s ease, margin-top .28s ease;
+  }
+  .barra-filtros--presa:not(.barra-filtros--aberta) .filtros-linha {
+    max-height: 0; opacity: 0; transform: translateY(-8px); margin-top: -12px; overflow: hidden; pointer-events: none;
+  }
+  .barra-filtros .filtro-seta {
+    display: inline-flex; width: 0; min-width: 0; padding: 0; margin-left: -8px; border-width: 0; opacity: 0; overflow: hidden;
+    pointer-events: none; visibility: hidden; transform: scale(.6);
+    transition: width .25s ease, margin-left .25s ease, opacity .2s ease, transform .25s ease, visibility 0s linear .25s;
+  }
+  .barra-filtros--presa .filtro-seta {
+    width: 44px; margin-left: 0; border-width: 1px; opacity: 1; transform: none; pointer-events: auto; visibility: visible;
+    transition: width .25s ease, margin-left .25s ease, opacity .2s ease, transform .25s ease, visibility 0s;
+  }
+  .barra-filtros { transition: box-shadow .2s ease; }
+  .barra-filtros--presa { box-shadow: 0 6px 12px -10px rgba(0, 0, 0, .35); }
 }
 
 /* Dashboard: o período fica sempre na tela */
@@ -673,3 +689,6 @@ body:has(.faixa-teste) { --topo-fixo: 28px; }
 .periodos-area { align-self: stretch; display: flex; justify-content: flex-end; }
 @media (max-width: 959px) { .periodos-area { display: block; } }
 .periodos-area { max-width: none; }
+@media (prefers-reduced-motion: reduce) {
+  .barra-filtros .filtros-linha, .barra-filtros .filtro-seta, .filtro-seta svg { transition: none; }
+}
