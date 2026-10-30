@@ -3,6 +3,7 @@ import { STATUS, nomeStatus } from '../lib/dados'
 import { baixarCsv } from '../lib/csv'
 import { dataHora, reais, resumoItens, semAcento } from '../lib/formato'
 import { DetalheReserva } from './DetalheReserva'
+import { AcoesEmMassa } from './AcoesEmMassa'
 import { IconeBaixar, IconeBusca, IconeReservas } from './Icones'
 
 export function Selo({ status }) {
@@ -13,6 +14,12 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   const [filtro, setFiltro] = useState(filtroInicial ?? 'ativas')
   const [busca, setBusca] = useState('')
   const [recado, setRecado] = useState('')
+  const [marcadas, setMarcadas] = useState(() => new Set())
+  const [acoesAbertas, setAcoesAbertas] = useState(false) // celular: painel de ações em tela cheia
+
+  // Trocar de filtro ou buscar limpa a seleção, para não agir em reservas que não estão na tela.
+  useEffect(() => { setMarcadas(new Set()) }, [filtro, busca])
+  useEffect(() => { if (marcadas.size === 0) setAcoesAbertas(false) }, [marcadas])
 
   useEffect(() => {
     if (!recado) return
@@ -44,6 +51,32 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   }, [reservas, filtro, busca])
 
   const atual = reservas.find((r) => r.id === selecionada) ?? null
+  const selecionando = marcadas.size > 0
+  const listaMarcadas = visiveis.filter((r) => marcadas.has(r.id))
+  const todasMarcadas = visiveis.length > 0 && listaMarcadas.length === visiveis.length
+
+  const alternar = (id) => setMarcadas((m) => {
+    const n = new Set(m)
+    if (n.has(id)) n.delete(id); else n.add(id)
+    return n
+  })
+  const alternarTodas = () => setMarcadas(todasMarcadas ? new Set() : new Set(visiveis.map((r) => r.id)))
+  const limpar = () => setMarcadas(new Set())
+
+  // Esc limpa a seleção.
+  useEffect(() => {
+    if (!selecionando) return
+    const tecla = (e) => { if (e.key === 'Escape') limpar() }
+    window.addEventListener('keydown', tecla)
+    return () => window.removeEventListener('keydown', tecla)
+  }, [selecionando])
+
+  const atualizarEmMassa = (linhas, status) => {
+    linhas.forEach(aoAtualizar)
+    const n = listaMarcadas.length
+    setRecado(`${n} ${n === 1 ? 'reserva marcada' : 'reservas marcadas'} como ${nomeStatus(status).toLowerCase()}.`)
+    limpar()
+  }
 
   const atualizar = (antiga) => (nova) => {
     aoAtualizar(nova)
@@ -51,7 +84,7 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   }
 
   return (
-    <div className={`reservas${atual ? ' reservas--com-detalhe' : ''}`}>
+    <div className={`reservas${(selecionando ? acoesAbertas : atual) ? ' reservas--com-detalhe' : ''}${selecionando ? ' reservas--selecionando' : ''}`}>
       <div className="reservas__lista">
         <div className="ferramentas">
           <label className="busca">
@@ -80,10 +113,22 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
             )}
           </div>
         ) : (
-          <ul className="linhas" aria-label={`${visiveis.length} reservas`}>
+          <div className="linhas">
+          <label className="selecionar-todas">
+            <input type="checkbox" className="marcar" checked={todasMarcadas}
+              ref={(el) => { if (el) el.indeterminate = selecionando && !todasMarcadas }}
+              onChange={alternarTodas} />
+            <span>{selecionando ? `${listaMarcadas.length} de ${visiveis.length} selecionadas` : `Selecionar todas (${visiveis.length})`}</span>
+          </label>
+          <ul aria-label={`${visiveis.length} reservas`}>
             {visiveis.map((r) => (
-              <li key={r.id}>
-                <a href={`#/reservas/${r.id}`} className="linha" aria-current={r.id === selecionada ? 'true' : undefined}>
+              <li key={r.id} className={marcadas.has(r.id) ? 'linha-marcada' : undefined}>
+                <label className="linha__marcar">
+                  <input type="checkbox" className="marcar" checked={marcadas.has(r.id)} onChange={() => alternar(r.id)}
+                    aria-label={`Selecionar reserva de ${r.nome}`} />
+                </label>
+                <a href={`#/reservas/${r.id}`} className="linha" aria-current={!selecionando && r.id === selecionada ? 'true' : undefined}
+                  onClick={(e) => { if (selecionando) { e.preventDefault(); alternar(r.id) } }}>
                   <span className="linha__principal">
                     <span className="linha__nome">{r.nome}</span>
                     <span className="linha__resumo">{resumoItens(r)}</span>
@@ -97,11 +142,15 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
               </li>
             ))}
           </ul>
+          </div>
         )}
       </div>
 
       <section className="reservas__detalhe" aria-label="Detalhe da reserva">
-        {atual
+        {selecionando ? (
+          <AcoesEmMassa reservas={listaMarcadas} aoDesmarcar={alternar} aoLimpar={limpar}
+            aoVoltar={() => setAcoesAbertas(false)} aoAtualizar={atualizarEmMassa} />
+        ) : atual
           ? <DetalheReserva key={atual.id} reserva={atual} aoFechar={() => aoSelecionar(null)} aoAtualizar={atualizar(atual)} />
           : (
             <div className="detalhe-vazio">
@@ -110,6 +159,14 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
             </div>
           )}
       </section>
+
+      {selecionando && !acoesAbertas && (
+        <div className="barra-selecao">
+          <span><strong>{listaMarcadas.length}</strong> {listaMarcadas.length === 1 ? 'selecionada' : 'selecionadas'}</span>
+          <button type="button" className="link" onClick={limpar}>Limpar</button>
+          <button type="button" className="botao botao--principal" onClick={() => setAcoesAbertas(true)}>Ações</button>
+        </div>
+      )}
 
       {recado && <p className="recado" role="status">{recado}</p>}
     </div>

@@ -68,3 +68,9 @@ export async function salvarProduto(produto) {
 
 export const alternarProduto = (id, campos) =>
   rest(`produtos?id=eq.${id}`, { metodo: 'PATCH', corpo: campos, retornar: true }).then((l) => l[0])
+
+// Muda o mesmo campo em várias reservas de uma vez (ex.: marcar 6 como entregues).
+export const atualizarVarias = (ids, campos) =>
+  rest(`reservas?id=in.(${ids.join(',')})&select=id,status,observacao,atualizado_em`, {
+    metodo: 'PATCH', corpo: campos, retornar: true,
+  })
