@@ -536,3 +536,21 @@ body:has(.faixa-teste) .barra-celular { top: 28px; }
 .nav-inferior .nav-item[aria-current="page"]::before {
   content: ''; position: absolute; top: -6px; left: 50%; width: 28px; margin-left: -14px; height: 3px; border-radius: 0 0 3px 3px; background: var(--destaque);
 }
+
+/* ===== Variedades no mesmo formato das reservas ===== */
+.linha--variedade {
+  width: 100%; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  grid-template-columns: 44px minmax(0, 1fr) auto; grid-template-areas: "foto principal lado"; align-items: center; column-gap: 14px;
+}
+.linha--apagada .linha__foto, .linha--apagada .linha__principal { opacity: .55; }
+.linha__foto { grid-area: foto; width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+.linha__foto--vazia { display: flex; align-items: center; justify-content: center; background: var(--superficie-2); color: var(--texto-3); }
+.variedade-foto { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; }
+.variedade-foto--vazia { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--superficie-2); color: var(--texto-3); font-size: 13.5px; }
+.variedade-texto { font-size: 14px; color: var(--texto-2); }
+.massa-status strong { font-weight: 600; }
+.reservas__detalhe .painel-form { max-width: none; border: 0; box-shadow: none; border-radius: 0; }
+@media (max-width: 959px) {
+  .reservas--com-detalhe .reservas__detalhe .painel-form { padding: 16px 16px calc(32px + env(safe-area-inset-bottom)); }
+}
+.linha--variedade .linha__resumo { white-space: normal; }

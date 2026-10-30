@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { salvarProduto } from '../lib/dados'
 import { enviarFoto } from '../lib/supabase'
-import { slugDe } from '../lib/formato'
+import { fotoDe, slugDe } from '../lib/formato'
 
 export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, aoSalvar }) {
   const novo = !produto
@@ -53,7 +53,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
     }
   }
 
-  const fotoAtual = previa || f.imagem_url
+  const fotoAtual = previa || f.imagem_url || (produto ? fotoDe(produto) : null)
 
   return (
     <form className="painel-form form" onSubmit={aoEnviar} noValidate>

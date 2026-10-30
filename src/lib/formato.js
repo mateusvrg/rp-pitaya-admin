@@ -30,3 +30,7 @@ export function linkWhatsApp(r) {
     'Podemos combinar o pagamento e o dia?'
   return `https://wa.me/55${r.whatsapp}?text=${encodeURIComponent(texto)}`
 }
+
+// Fotos que já vêm no site de reservas (cópia em public/fotos-site). A foto enviada pelo painel tem prioridade.
+const FOTOS_DO_SITE = ['royal-red', 'vietnamese-white', 'teruya-do-vale']
+export const fotoDe = (p) => p.imagem_url || (FOTOS_DO_SITE.includes(p.slug) ? `/fotos-site/${p.slug}.jpg` : null)

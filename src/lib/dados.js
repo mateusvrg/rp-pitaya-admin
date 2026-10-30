@@ -74,3 +74,8 @@ export const atualizarVarias = (ids, campos) =>
   rest(`reservas?id=in.(${ids.join(',')})&select=id,status,observacao,atualizado_em`, {
     metodo: 'PATCH', corpo: campos, retornar: true,
   })
+
+// Liga/desliga o mesmo campo em várias variedades de uma vez (disponível ou no site).
+export const alternarVarios = (ids, campos) =>
+  rest(`produtos?id=in.(${ids.join(',')})`, { metodo: 'PATCH', corpo: campos, retornar: true })
+    .then((l) => l.map((p) => ({ ...p, preco_unidade: Number(p.preco_unidade) })))
