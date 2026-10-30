@@ -577,18 +577,20 @@ body:has(.faixa-teste) .barra-celular { top: 28px; }
   position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0;
   border: 0; background: transparent; overflow: visible;
 }
-.filtros-flutuantes::backdrop { background: transparent; }
+.filtros-flutuantes::backdrop { background: rgba(0, 0, 0, .38); animation: filtro-fundo .18s ease-out; }
+@keyframes filtro-fundo { from { opacity: 0; } }
 .filtros-flutuantes__pilha {
-  position: absolute; right: 16px; left: 16px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  position: absolute; right: 16px; left: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
   pointer-events: none;
 }
 .filtros-flutuantes__opcao {
   pointer-events: auto; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px;
-  border: 1px solid var(--borda-forte); border-radius: 22px; background: var(--superficie); color: var(--texto);
-  font: 500 15px var(--fonte); cursor: pointer; position: relative; box-shadow: 0 6px 20px rgba(0, 0, 0, .16);
+  border: 1px solid var(--borda-forte); border-radius: 22px; background: var(--superficie); color: var(--texto); opacity: 1;
+  font: 600 15px var(--fonte); cursor: pointer; position: relative; box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
   animation: filtro-entra .18s ease-out backwards;
 }
-.filtros-flutuantes__opcao[aria-pressed="true"] { border-color: var(--destaque); background: var(--destaque-suave); }
+.filtros-flutuantes__opcao[aria-pressed="true"] { border: 2px solid var(--destaque); color: var(--destaque); }
+.filtros-flutuantes__opcao .segmento__qtd { color: var(--texto-2); font-weight: 500; }
 .filtros-flutuantes__opcao[aria-pressed="true"]::after {
   content: ''; position: absolute; left: 16px; right: 16px; bottom: 6px; height: 2px; border-radius: 2px; background: var(--destaque);
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { IconeFiltro } from './Icones'
 
 // No celular, os filtros viram um botão "Filtros". Ao tocar, as opções aparecem como botões
-// flutuando no lado direito da tela, logo abaixo do botão (sem fundo escuro). Tocar fora fecha.
+// flutuando no lado esquerdo da tela, logo abaixo do botão (com o fundo levemente escurecido). Tocar fora fecha.
 // No computador este botão fica escondido e aparecem os segmentos normais.
 export function FiltroCelular({ titulo = 'Filtrar', opcoes, valor, aoEscolher }) {
   const [topo, setTopo] = useState(null) // posição (px) onde começa a pilha de botões; null = fechado
