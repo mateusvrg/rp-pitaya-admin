@@ -4,7 +4,10 @@ import { baixarCsv } from '../lib/csv'
 import { dataHora, reais, resumoItens, semAcento } from '../lib/formato'
 import { DetalheReserva } from './DetalheReserva'
 import { AcoesEmMassa } from './AcoesEmMassa'
-import { IconeBaixar, IconeBusca, IconeReservas } from './Icones'
+import { Calendario } from './Calendario'
+import { IconeBaixar, IconeBusca, IconeCalendario, IconeFechar, IconeReservas } from './Icones'
+
+const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 
 export function Selo({ status }) {
   return <span className={`selo selo--${status}`}><span className="selo__ponto" aria-hidden="true" />{nomeStatus(status)}</span>
@@ -16,9 +19,11 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   const [recado, setRecado] = useState('')
   const [marcadas, setMarcadas] = useState(() => new Set())
   const [acoesAbertas, setAcoesAbertas] = useState(false) // celular: painel de ações em tela cheia
+  const [periodo, setPeriodo] = useState(null) // { de, ate } escolhido no calendário, ou null = qualquer data
+  const [calendarioAberto, setCalendarioAberto] = useState(false)
 
   // Trocar de filtro ou buscar limpa a seleção, para não agir em reservas que não estão na tela.
-  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca])
+  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca, periodo])
   useEffect(() => { if (marcadas.size === 0) setAcoesAbertas(false) }, [marcadas])
 
   useEffect(() => {
@@ -27,28 +32,36 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
     return () => clearTimeout(t)
   }, [recado])
 
+  // Reservas feitas dentro do período escolhido (do primeiro dia 00:00 até o fim do último dia).
+  const doPeriodo = useMemo(() => {
+    if (!periodo) return reservas
+    const inicio = new Date(periodo.de); inicio.setHours(0, 0, 0, 0)
+    const fim = new Date(periodo.ate); fim.setHours(23, 59, 59, 999)
+    return reservas.filter((r) => { const d = new Date(r.criado_em); return d >= inicio && d <= fim })
+  }, [reservas, periodo])
+
   const contagem = useMemo(() => {
     const c = Object.fromEntries(STATUS.map((s) => [s.id, 0]))
-    reservas.forEach((r) => { c[r.status] = (c[r.status] ?? 0) + 1 })
+    doPeriodo.forEach((r) => { c[r.status] = (c[r.status] ?? 0) + 1 })
     return c
-  }, [reservas])
+  }, [doPeriodo])
 
   const filtros = [
     { id: 'ativas', nome: 'Em aberto', qtd: contagem.nova + contagem.em_contato + contagem.paga },
     ...STATUS.map((s) => ({ id: s.id, nome: s.plural, qtd: contagem[s.id] })),
-    { id: 'todas', nome: 'Todas', qtd: reservas.length },
+    { id: 'todas', nome: 'Todas', qtd: doPeriodo.length },
   ]
 
   const visiveis = useMemo(() => {
     const termo = semAcento(busca.trim())
     const digitos = busca.replace(/\D/g, '')
-    return reservas.filter((r) => {
+    return doPeriodo.filter((r) => {
       const passa = filtro === 'todas' || (filtro === 'ativas' ? ['nova', 'em_contato', 'paga'].includes(r.status) : r.status === filtro)
       if (!passa) return false
       if (!termo) return true
       return semAcento(r.nome).includes(termo) || (digitos.length >= 3 && r.whatsapp.includes(digitos))
     })
-  }, [reservas, filtro, busca])
+  }, [doPeriodo, filtro, busca])
 
   const atual = reservas.find((r) => r.id === selecionada) ?? null
   const selecionando = marcadas.size > 0
@@ -110,25 +123,48 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
           </button>
         </div>
 
-        <div className="segmentos" role="group" aria-label="Filtrar por status">
-          {filtros.map((f) => (
-            <button key={f.id} type="button" className="segmento" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>
-              {f.nome}<span className="segmento__qtd">{f.qtd}</span>
-            </button>
-          ))}
+        <div className="filtros-linha">
+          <div className="segmentos" role="group" aria-label="Filtrar por status">
+            {filtros.map((f) => (
+              <button key={f.id} type="button" className="segmento" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>
+                {f.nome}<span className="segmento__qtd">{f.qtd}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="filtro-periodo">
+            <div className="segmentos">
+              <button type="button" className="segmento segmento--calendario" aria-pressed={Boolean(periodo)}
+                aria-expanded={calendarioAberto} onClick={() => setCalendarioAberto((a) => !a)}>
+                <IconeCalendario tamanho={16} />
+                <span>{periodo ? `${curta(periodo.de)} – ${curta(periodo.ate)}` : 'Período'}</span>
+              </button>
+              {periodo && (
+                <button type="button" className="segmento segmento--limpar" onClick={() => setPeriodo(null)} aria-label="Tirar o filtro de período">
+                  <IconeFechar tamanho={15} />
+                </button>
+              )}
+            </div>
+            {calendarioAberto && (
+              <Calendario inicial={periodo} aoFechar={() => setCalendarioAberto(false)}
+                aoAplicar={({ de, ate }) => { setPeriodo({ de, ate }); setCalendarioAberto(false) }} />
+            )}
+          </div>
         </div>
 
         {visiveis.length === 0 ? (
           <div className="vazio">
-            <p>{busca ? `Nenhuma reserva encontrada para "${busca}".` : 'Nenhuma reserva neste filtro.'}</p>
-            {(busca || filtro !== 'todas') && (
-              <button type="button" className="link" onClick={() => { setBusca(''); setFiltro('todas') }}>Ver todas</button>
+            <p>{busca ? `Nenhuma reserva encontrada para "${busca}".` : periodo ? 'Nenhuma reserva neste filtro e período.' : 'Nenhuma reserva neste filtro.'}</p>
+            {(busca || filtro !== 'todas' || periodo) && (
+              <button type="button" className="link" onClick={() => { setBusca(''); setFiltro('todas'); setPeriodo(null) }}>Ver todas</button>
             )}
           </div>
         ) : (
           <div className="linhas">
           <div className="selecionar-todas">
-            <span>{selecionando ? `${listaMarcadas.length} de ${visiveis.length} selecionadas` : 'Use a faixa à esquerda para selecionar'}</span>
+            <button type="button" className={`linha__faixa${selecionando && !todasMarcadas ? ' linha__faixa--parcial' : ''}`}
+              aria-pressed={todasMarcadas} aria-label={todasMarcadas ? 'Desmarcar todas' : 'Selecionar todas'} onClick={alternarTodas} />
+            <span className="selecionar-todas__texto">{selecionando ? `${listaMarcadas.length} de ${visiveis.length} selecionadas` : 'Use a faixa à esquerda para selecionar'}</span>
             <button type="button" className="selecionar-todas__botao" onClick={alternarTodas}>
               {todasMarcadas ? 'Desmarcar todas' : `Selecionar todas (${visiveis.length})`}
             </button>
