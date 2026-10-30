@@ -701,3 +701,22 @@ body:has(.faixa-teste) { --topo-fixo: 28px; }
 @keyframes aba-entra-esquerda { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: none; } }
 @media (min-width: 960px) { .aba-entra-direita, .aba-entra-esquerda { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .conteudo-aba { transition: none; } .aba-entra-direita, .aba-entra-esquerda { animation: none; } }
+
+/* Rodapé da lista: mostrar mais / todas / recolher */
+.mais-itens {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 12px 16px; border-top: 1px solid var(--borda); background: var(--superficie-2);
+}
+.mais-itens__conta { font-size: 13px; color: var(--texto-3); }
+.mais-itens__botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.mais-itens .botao { min-height: 36px; padding: 0 12px; font-size: 13.5px; }
+@media (max-width: 640px) {
+  .mais-itens { flex-direction: column; align-items: stretch; }
+  .mais-itens__conta { text-align: center; }
+  .mais-itens__botoes .botao { flex: 1 1 0; }
+}
+
+/* A animação de troca de aba não pode deixar a página mais larga que a tela
+   (isso fazia o navegador do celular "afastar o zoom" e a barra de baixo encolher por um instante). */
+.painel { overflow-x: clip; }
+.nav-inferior { transform: translateZ(0); }

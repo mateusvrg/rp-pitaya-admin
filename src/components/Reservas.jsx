@@ -7,6 +7,7 @@ import { AcoesEmMassa } from './AcoesEmMassa'
 import { Calendario } from './Calendario'
 import { FiltroCelular } from './FiltroCelular'
 import { useBarraFixa } from './useBarraFixa'
+import { MaisItens, POR_PAGINA } from './MaisItens'
 import { IconeBaixar, IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas } from './Icones'
 
 // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
@@ -27,7 +28,9 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   const [calendarioAberto, setCalendarioAberto] = useState(false)
 
   // Trocar de filtro ou buscar limpa a seleção, para não agir em reservas que não estão na tela.
-  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca, periodo])
+  // Lista mostra 10 por vez; trocar de filtro ou buscar volta para 10.
+  const [limite, setLimite] = useState(POR_PAGINA)
+  useEffect(() => { setMarcadas(new Set()); ultima.current = null; setLimite(POR_PAGINA) }, [filtro, busca, periodo])
   useEffect(() => { if (marcadas.size === 0) setAcoesAbertas(false) }, [marcadas])
 
   useEffect(() => {
@@ -193,7 +196,7 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
             </button>
           </div>
           <ul aria-label={`${visiveis.length} reservas`}>
-            {visiveis.map((r, i) => (
+            {visiveis.slice(0, limite).map((r, i) => (
               <li key={r.id} className={marcadas.has(r.id) ? 'linha-marcada' : undefined}>
                 <button type="button" className="linha__faixa" aria-pressed={marcadas.has(r.id)}
                   aria-label={`Selecionar reserva de ${r.nome}`} onClick={(e) => clicarFaixa(e, i)} />
@@ -212,6 +215,7 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
               </li>
             ))}
           </ul>
+          <MaisItens mostrando={Math.min(limite, visiveis.length)} total={visiveis.length} setLimite={setLimite} />
           </div>
         )}
       </div>
