@@ -336,7 +336,13 @@ th, td { padding: 8px 24px 8px 0; border-bottom: 1px solid var(--borda); }
 }
 .calendario__rodape { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--borda); }
 @media (max-width: 640px) {
-  .calendario { position: fixed; left: 8px; right: 8px; top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); width: auto; max-width: none; }
+  /* Celular: preso no alto da tela, logo abaixo do cabeçalho. Se o mês tiver 6 semanas, cresce para baixo
+     e as setas não saem do lugar. */
+  .calendario {
+    position: fixed; left: 8px; right: 8px; top: calc(64px + env(safe-area-inset-top)); bottom: auto; width: auto; max-width: none;
+    max-height: calc(100dvh - 64px - 84px - env(safe-area-inset-bottom)); overflow-y: auto;
+  }
+  body:has(.faixa-teste) .calendario { top: calc(92px + env(safe-area-inset-top)); max-height: calc(100dvh - 92px - 84px - env(safe-area-inset-bottom)); }
   .cal-dia { height: 42px; }
 }
 @media (min-width: 960px) { .segmentos { flex-wrap: wrap; } }
