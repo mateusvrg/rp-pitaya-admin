@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { STATUS, nomeStatus } from '../lib/dados'
 import { baixarCsv } from '../lib/csv'
 import { dataHora, reais, resumoItens, semAcento } from '../lib/formato'
@@ -18,7 +18,7 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   const [acoesAbertas, setAcoesAbertas] = useState(false) // celular: painel de ações em tela cheia
 
   // Trocar de filtro ou buscar limpa a seleção, para não agir em reservas que não estão na tela.
-  useEffect(() => { setMarcadas(new Set()) }, [filtro, busca])
+  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca])
   useEffect(() => { if (marcadas.size === 0) setAcoesAbertas(false) }, [marcadas])
 
   useEffect(() => {
@@ -62,6 +62,19 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   })
   const alternarTodas = () => setMarcadas(todasMarcadas ? new Set() : new Set(visiveis.map((r) => r.id)))
   const limpar = () => setMarcadas(new Set())
+
+  // Clique na faixa marca/desmarca. Com Shift (computador), marca todas entre a última clicada e esta.
+  const ultima = useRef(null)
+  const clicarFaixa = (e, i) => {
+    const id = visiveis[i].id
+    if (e.shiftKey && ultima.current != null) {
+      const [de, ate] = [Math.min(ultima.current, i), Math.max(ultima.current, i)]
+      setMarcadas((m) => { const n = new Set(m); visiveis.slice(de, ate + 1).forEach((r) => n.add(r.id)); return n })
+    } else {
+      alternar(id)
+    }
+    ultima.current = i
+  }
 
   // Esc limpa a seleção.
   useEffect(() => {
@@ -114,19 +127,17 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
           </div>
         ) : (
           <div className="linhas">
-          <label className="selecionar-todas">
-            <input type="checkbox" className="marcar" checked={todasMarcadas}
-              ref={(el) => { if (el) el.indeterminate = selecionando && !todasMarcadas }}
-              onChange={alternarTodas} />
-            <span>{selecionando ? `${listaMarcadas.length} de ${visiveis.length} selecionadas` : `Selecionar todas (${visiveis.length})`}</span>
-          </label>
+          <div className="selecionar-todas">
+            <span>{selecionando ? `${listaMarcadas.length} de ${visiveis.length} selecionadas` : 'Use a faixa à esquerda para selecionar'}</span>
+            <button type="button" className="selecionar-todas__botao" onClick={alternarTodas}>
+              {todasMarcadas ? 'Desmarcar todas' : `Selecionar todas (${visiveis.length})`}
+            </button>
+          </div>
           <ul aria-label={`${visiveis.length} reservas`}>
-            {visiveis.map((r) => (
+            {visiveis.map((r, i) => (
               <li key={r.id} className={marcadas.has(r.id) ? 'linha-marcada' : undefined}>
-                <label className="linha__marcar">
-                  <input type="checkbox" className="marcar" checked={marcadas.has(r.id)} onChange={() => alternar(r.id)}
-                    aria-label={`Selecionar reserva de ${r.nome}`} />
-                </label>
+                <button type="button" className="linha__faixa" aria-pressed={marcadas.has(r.id)}
+                  aria-label={`Selecionar reserva de ${r.nome}`} onClick={(e) => clicarFaixa(e, i)} />
                 <a href={`#/reservas/${r.id}`} className="linha" aria-current={!selecionando && r.id === selecionada ? 'true' : undefined}
                   onClick={(e) => { if (selecionando) { e.preventDefault(); alternar(r.id) } }}>
                   <span className="linha__principal">
