@@ -22,8 +22,8 @@ function Metrica({ rotulo, valor, detalhe, tendencia }) {
   return (
     <div className="metrica">
       <p className="metrica__rotulo">{rotulo}</p>
-      <p className="metrica__valor">{valor}</p>
-      {detalhe && <p className={`metrica__detalhe${tendencia ? ` metrica__detalhe--${tendencia}` : ''}`}>{detalhe}</p>}
+      <p className="metrica__valor" key={String(valor)}>{valor}</p>
+      {detalhe && <p key={String(detalhe)} className={`metrica__detalhe${tendencia ? ` metrica__detalhe--${tendencia}` : ''}`}>{detalhe}</p>}
     </div>
   )
 }

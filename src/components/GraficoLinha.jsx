@@ -76,8 +76,8 @@ export function GraficoLinha({ pontos, descricao, formatar = (v) => v, altura = 
             </g>
           ))}
 
-          <path d={area} fill={`url(#${idGradiente})`} />
-          <path d={linha} className="linha-grafico__linha" />
+          <path key={`a${area}`} d={area} fill={`url(#${idGradiente})`} className="linha-grafico__area" />
+          <path key={`l${linha}`} d={linha} pathLength="1" className="linha-grafico__linha" />
 
           {pontos.map((pt, i) => mostraRotulo(i) && (
             <text key={i} x={x(i)} y={altura - 8} textAnchor={i === 0 ? 'start' : i === pontos.length - 1 ? 'end' : 'middle'}

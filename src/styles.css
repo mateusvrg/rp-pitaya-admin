@@ -730,3 +730,75 @@ body:has(.faixa-teste) { --topo-fixo: 28px; }
    (isso fazia o navegador do celular "afastar o zoom" e a barra de baixo encolher por um instante). */
 .painel { overflow-x: clip; }
 .nav-inferior { transform: translateZ(0); }
+
+/* ===================================================================
+   Movimento: tudo que antes aparecia/sumia "seco" agora entra suave.
+   =================================================================== */
+:root { --mov-rapido: .16s; --mov: .26s; --curva: cubic-bezier(.2, .8, .3, 1); }
+
+/* Trocas de cor e fundo (botões, linhas, filtros, menu, tema claro/escuro) */
+body { transition: background-color var(--mov) ease, color var(--mov) ease; }
+.botao, .botao-fantasma, .segmento, .nav-item, .status-opcao, .linha, .linhas li, .busca, .campo,
+.opcao, .chave, .alerta, .barras__linha, .folha-filtros__opcao, .filtros-flutuantes__opcao, .massa-nomes li, .cal-dia {
+  transition: background-color var(--mov-rapido) ease, color var(--mov-rapido) ease, border-color var(--mov-rapido) ease,
+    box-shadow var(--mov-rapido) ease, transform var(--mov-rapido) ease, opacity var(--mov-rapido) ease;
+}
+.botao:active:not(:disabled), .botao-fantasma:active:not(:disabled), .status-opcao:active:not(:disabled),
+.segmento:active, .mais-itens__acao:active, .filtro-seta:active, .botao-icone:active:not(:disabled), .filtro-celular:active {
+  transform: scale(.97);
+}
+
+/* Traço rosa do item escolhido cresce do centro */
+.segmento[aria-pressed="true"]::after { animation: traco-cresce var(--mov) var(--curva); }
+.nav-lateral .nav-item[aria-current="page"]::before { animation: traco-desce var(--mov) var(--curva); }
+.nav-inferior .nav-item[aria-current="page"]::before { animation: traco-cresce var(--mov) var(--curva); }
+@keyframes traco-cresce { from { transform: scaleX(0); opacity: 0; } }
+@keyframes traco-desce { from { transform: scaleY(0); opacity: 0; } }
+
+/* Painel do lado (detalhe da reserva, variedade, ações em massa, formulário) entra deslizando */
+.reservas__detalhe > .detalhe, .reservas__detalhe > .painel-form, .reservas__detalhe > .detalhe-vazio {
+  animation: painel-entra var(--mov) var(--curva);
+}
+@keyframes painel-entra { from { opacity: 0; transform: translateX(14px); } }
+@media (max-width: 959px) {
+  /* Celular: a tela do detalhe entra da direita, inteira, como nos apps */
+  .reservas--com-detalhe .reservas__detalhe { animation: tela-entra .3s var(--curva); }
+  .reservas--com-detalhe .reservas__detalhe > * { animation: none; }
+  @keyframes tela-entra { from { transform: translateX(100%); } }
+}
+
+/* Confirmação de mudança em massa, mensagens e avisos */
+.confirmar-massa { animation: desce-entra var(--mov) var(--curva); }
+.erro, .ok, .alerta { animation: desce-entra var(--mov) var(--curva); }
+@keyframes desce-entra { from { opacity: 0; transform: translateY(-6px); } }
+
+/* Aviso rápido no rodapé (ex.: "3 reservas marcadas como entregue") e barra de seleção do celular sobem */
+.recado { animation: recado-sobe .3s var(--curva); }
+@keyframes recado-sobe { from { opacity: 0; transform: translate(-50%, 14px); } }
+.barra-selecao { animation: sobe-entra .28s var(--curva); }
+@keyframes sobe-entra { from { opacity: 0; transform: translateY(16px); } }
+
+/* Calendário abre com um leve "pop" */
+.calendario { animation: pop-entra .2s var(--curva); transform-origin: top left; }
+@keyframes pop-entra { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
+
+/* Dashboard: números trocam deslizando, barras crescem e mudam de tamanho, a linha do gráfico se desenha */
+.metrica__valor, .metrica__detalhe { animation: valor-troca .35s var(--curva); }
+@keyframes valor-troca { from { opacity: 0; transform: translateY(6px); } }
+.barras__barra { transform-origin: left center; transition: width .45s var(--curva), background-color var(--mov) ease; animation: barra-cresce .6s var(--curva); }
+@keyframes barra-cresce { from { transform: scaleX(0); } }
+.linha-grafico__linha { stroke-dasharray: 1; stroke-dashoffset: 0; animation: linha-desenha .8s var(--curva); }
+@keyframes linha-desenha { from { stroke-dashoffset: 1; } }
+.linha-grafico__area { animation: area-surge .7s ease; }
+@keyframes area-surge { from { opacity: 0; } }
+.linha-grafico__ponto, .linha-grafico__guia { transition: cx .12s ease, x1 .12s ease, x2 .12s ease; }
+.dica { animation: area-surge .14s ease; } /* só aparece (a posição dela usa transform) */
+
+/* Tela de login e carregamento */
+.login { animation: sobe-entra .4s var(--curva); }
+.estado { animation: area-surge .3s ease; }
+
+/* Quem prefere menos movimento no celular/computador: desliga tudo isso */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; }
+}
