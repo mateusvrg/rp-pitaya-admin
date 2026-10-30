@@ -114,12 +114,15 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   return (
     <div className={`reservas${(selecionando ? acoesAbertas : atual) ? ' reservas--com-detalhe' : ''}${selecionando ? ' reservas--selecionando' : ''}`}>
       <div className="reservas__lista">
+        {/* Busca e filtros ficam presos no topo ao rolar a lista (no celular, só a busca + setinha) */}
+        <div className="barra-filtros">
         <div className="ferramentas">
           <label className="busca">
             <IconeBusca tamanho={18} />
             <span className="sr-only">Buscar por nome ou telefone</span>
             <input type="search" placeholder="Buscar por nome ou telefone" value={busca} onChange={(e) => setBusca(e.target.value)} />
           </label>
+          <span className="so-celular"><FiltroCelular variante="seta" titulo="Filtrar reservas" opcoes={filtros} valor={filtro} aoEscolher={setFiltro} /></span>
           <button type="button" className="botao botao--secundario so-computador" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}>
             <IconeBaixar tamanho={18} /> <span>Planilha</span>
           </button>
@@ -158,6 +161,7 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
             aria-label="Baixar planilha" title="Baixar planilha">
             <IconeBaixar tamanho={18} />
           </button>
+        </div>
         </div>
 
         {visiveis.length === 0 ? (

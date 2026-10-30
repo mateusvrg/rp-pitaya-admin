@@ -25,3 +25,4 @@ export const IconeTelefone = (p) => <Svg {...p}><path d="M5 4.5h3.2l1.6 4-2 1.3a
 export const IconeFoto = (p) => <Svg {...p}><rect x="3.5" y="5" width="17" height="14" rx="2.5" /><circle cx="9" cy="10" r="1.6" /><path d="M20.5 16l-5-5-8.5 8" /></Svg>
 export const IconeCalendario = (p) => <Svg {...p}><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M3.5 10h17M8 3v4M16 3v4" /></Svg>
 export const IconeFiltro = (p) => <Svg {...p}><path d="M4 6h16M7 12h10M10 18h4" /></Svg>
+export const IconeSetaBaixo = (p) => <Svg {...p}><path d="M6 9l6 6 6-6" /></Svg>

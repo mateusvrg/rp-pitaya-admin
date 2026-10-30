@@ -120,14 +120,16 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
   return (
     <div className={`reservas${painelAberto ? ' reservas--com-detalhe' : ''}${selecionando ? ' reservas--selecionando' : ''}`}>
       <div className="reservas__lista">
+        <div className="barra-filtros">
         <div className="ferramentas">
           <label className="busca">
             <IconeBusca tamanho={18} />
             <span className="sr-only">Buscar variedade pelo nome</span>
             <input type="search" placeholder="Buscar variedade pelo nome" value={busca} onChange={(e) => setBusca(e.target.value)} />
           </label>
-          <button type="button" className="botao botao--principal" onClick={() => { limpar(); setAberta(null); setEditando('novo') }}>
-            <IconeMais tamanho={18} /> <span>Nova variedade</span>
+          <span className="so-celular"><FiltroCelular variante="seta" titulo="Filtrar variedades" opcoes={FILTROS.map((f) => ({ ...f, qtd: contagem[f.id] }))} valor={filtro} aoEscolher={setFiltro} /></span>
+          <button type="button" className="botao botao--principal botao--nova" aria-label="Nova variedade" onClick={() => { limpar(); setAberta(null); setEditando('novo') }}>
+            <IconeMais tamanho={18} /> <span className="so-computador">Nova variedade</span>
           </button>
         </div>
 
@@ -138,6 +140,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
               {f.nome}<span className="segmento__qtd">{contagem[f.id]}</span>
             </button>
           ))}
+        </div>
         </div>
 
         {visiveis.length === 0 ? (
