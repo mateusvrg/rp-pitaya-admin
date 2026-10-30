@@ -89,10 +89,8 @@ export function Calendario({ inicial, aoAplicar, aoFechar }) {
   useEffect(() => {
     caixa.current?.focus({ preventScroll: true })
     const tecla = (e) => { if (e.key === 'Escape') aoFechar() }
-    const fora = (e) => { if (caixa.current && !caixa.current.contains(e.target)) aoFechar() }
     window.addEventListener('keydown', tecla)
-    document.addEventListener('mousedown', fora)
-    return () => { window.removeEventListener('keydown', tecla); document.removeEventListener('mousedown', fora) }
+    return () => window.removeEventListener('keydown', tecla)
   }, [aoFechar])
 
   const setas = (e) => {
@@ -127,6 +125,9 @@ export function Calendario({ inicial, aoAplicar, aoFechar }) {
     : de ? `Início: ${formatarData(de)}. Agora escolha o último dia.` : 'Escolha o primeiro dia do período.'
 
   return (
+    <>
+    {/* Fundo atrás do calendário: clicar fora só fecha, sem abrir o que está embaixo */}
+    <div className="calendario-fundo" aria-hidden="true" onClick={aoFechar} />
     <div className="calendario" ref={caixa} tabIndex={-1} role="dialog" aria-label="Escolher período personalizado" onKeyDown={setas}>
       <div className="calendario__topo">
         <button type="button" className="botao-fantasma" onClick={() => setMes(somarMeses(mes, -1))} disabled={anteriorBloqueado} aria-label="Mês anterior"><IconeVoltar tamanho={18} /></button>
@@ -150,5 +151,6 @@ export function Calendario({ inicial, aoAplicar, aoFechar }) {
         <button type="button" className="botao botao--principal" disabled={!de || !ate} onClick={() => aoAplicar({ de, ate })}>Aplicar</button>
       </div>
     </div>
+    </>
   )
 }
