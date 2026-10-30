@@ -6,7 +6,8 @@ import { DetalheReserva } from './DetalheReserva'
 import { AcoesEmMassa } from './AcoesEmMassa'
 import { Calendario } from './Calendario'
 import { FiltroCelular } from './FiltroCelular'
-import { IconeBaixar, IconeBusca, IconeCalendario, IconeFechar, IconeReservas } from './Icones'
+import { useBarraFixa } from './useBarraFixa'
+import { IconeBaixar, IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas } from './Icones'
 
 // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
 const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...(d.getFullYear() !== new Date().getFullYear() && { year: '2-digit' }) })
@@ -18,6 +19,7 @@ export function Selo({ status }) {
 export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, aoAtualizar }) {
   const [filtro, setFiltro] = useState(filtroInicial ?? 'ativas')
   const [busca, setBusca] = useState('')
+  const barra = useBarraFixa()
   const [recado, setRecado] = useState('')
   const [marcadas, setMarcadas] = useState(() => new Set())
   const [acoesAbertas, setAcoesAbertas] = useState(false) // celular: painel de ações em tela cheia
@@ -115,14 +117,19 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
     <div className={`reservas${(selecionando ? acoesAbertas : atual) ? ' reservas--com-detalhe' : ''}${selecionando ? ' reservas--selecionando' : ''}`}>
       <div className="reservas__lista">
         {/* Busca e filtros ficam presos no topo ao rolar a lista (no celular, só a busca + setinha) */}
-        <div className="barra-filtros">
+        <div ref={barra.sentinela} className="barra-filtros__marca" aria-hidden="true" />
+        <div className={`barra-filtros${barra.presa ? ' barra-filtros--presa' : ''}${barra.aberta ? ' barra-filtros--aberta' : ''}`}>
         <div className="ferramentas">
           <label className="busca">
             <IconeBusca tamanho={18} />
             <span className="sr-only">Buscar por nome ou telefone</span>
             <input type="search" placeholder="Buscar por nome ou telefone" value={busca} onChange={(e) => setBusca(e.target.value)} />
           </label>
-          <span className="so-celular"><FiltroCelular variante="seta" titulo="Filtrar reservas" opcoes={filtros} valor={filtro} aoEscolher={setFiltro} /></span>
+          {/* Celular, com a lista rolada: setinha para mostrar de novo os filtros, o período e a planilha */}
+          <button type="button" className="filtro-seta" aria-expanded={barra.aberta} onClick={barra.alternar}
+            aria-label={barra.aberta ? 'Esconder filtros' : 'Mostrar filtros'} title="Filtros">
+            <IconeSetaBaixo tamanho={18} />
+          </button>
           <button type="button" className="botao botao--secundario so-computador" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}>
             <IconeBaixar tamanho={18} /> <span>Planilha</span>
           </button>

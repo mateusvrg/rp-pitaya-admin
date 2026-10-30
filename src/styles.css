@@ -631,29 +631,45 @@ body:has(.faixa-teste) .barra-celular { top: 28px; }
 /* Fundo atrás do calendário (fecha ao clicar fora) */
 .calendario-fundo { position: fixed; inset: 0; z-index: 29; background: rgba(0, 0, 0, .3); animation: filtro-fundo .18s ease-out; }
 
-/* ===== Busca e filtros presos no topo ao rolar (Reservas e Variedades) ===== */
+/* ===== Busca e filtros presos no topo ao rolar (Reservas, Variedades e Dashboard) ===== */
+:root { --topo-fixo: 0px; }
+body:has(.faixa-teste) { --topo-fixo: 28px; }
+@media (max-width: 959px) {
+  :root { --topo-fixo: 57px; }                      /* barra do topo do celular */
+  body:has(.faixa-teste) { --topo-fixo: 85px; }     /* + faixa laranja do teste */
+}
+.barra-filtros__marca { height: 0; }
 .barra-filtros {
-  position: sticky; top: 0; z-index: 15; display: flex; flex-direction: column; gap: 12px;
+  position: sticky; top: var(--topo-fixo); z-index: 15; display: flex; flex-direction: column; gap: 12px;
   margin: -12px -8px 0; padding: 12px 8px 10px; background: var(--fundo);
 }
-body:has(.faixa-teste) .barra-filtros { top: 28px; }
 .filtro-seta {
-  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 42px; flex: none; cursor: pointer;
+  display: none; align-items: center; justify-content: center; width: 44px; height: 42px; flex: none; cursor: pointer;
   border: 1px solid var(--borda-forte); border-radius: 8px; background: var(--superficie); color: var(--texto);
 }
-.filtro-seta[aria-expanded="true"] svg { transform: rotate(180deg); }
 .filtro-seta svg { transition: transform .15s; }
+.filtro-seta[aria-expanded="true"] svg { transform: rotate(180deg); }
+.filtros-linha--variedades { display: flex; flex-direction: column; gap: 12px; }
 @media (max-width: 640px) {
-  /* Celular: só a linha da busca (com a setinha dos filtros) fica presa, logo abaixo da barra do topo */
-  .barra-filtros { display: contents; }
-  .barra-filtros > .ferramentas {
-    position: sticky; top: var(--altura-barra-celular, 57px); z-index: 15;
-    margin: -8px -16px 0; padding: 8px 16px; background: var(--fundo); flex-wrap: nowrap;
-  }
-  body:has(.faixa-teste) .barra-filtros > .ferramentas { top: calc(28px + var(--altura-barra-celular, 57px)); }
-  .ferramentas .so-celular { flex: none; }
+  .barra-filtros { margin: -8px -16px 0; padding: 8px 16px; }
+  .barra-filtros > .ferramentas { flex-wrap: nowrap; }
+  /* Rolou a lista: só a busca + setinha; a setinha mostra de novo os filtros, o período e a planilha */
+  .barra-filtros--presa .filtro-seta { display: inline-flex; }
+  .barra-filtros--presa:not(.barra-filtros--aberta) .filtros-linha { display: none; }
+  .barra-filtros--aberta .filtros-linha { animation: filtro-entra .16s ease-out; }
 }
+
+/* Dashboard: o período fica sempre na tela */
+.periodos-area {
+  position: sticky; top: var(--topo-fixo); z-index: 15;
+  margin: -12px -8px 0; padding: 12px 8px 10px; background: var(--fundo);
+}
+@media (max-width: 640px) { .periodos-area { margin: -8px -16px 0; padding: 8px 16px; } }
 @media (max-width: 640px) {
   .barra-filtros > .ferramentas .busca { flex: 1 1 0; min-width: 0; }
   .botao--nova { width: 44px; min-height: 42px; padding: 0; flex: none; justify-content: center; }
 }
+/* A faixa do período ocupa a largura toda (para cobrir o que rola por baixo), com os botões à direita. */
+.periodos-area { align-self: stretch; display: flex; justify-content: flex-end; }
+@media (max-width: 959px) { .periodos-area { display: block; } }
+.periodos-area { max-width: none; }
