@@ -609,3 +609,24 @@ body:has(.faixa-teste) .barra-celular { top: 28px; }
   .filtro-periodo .segmento--calendario { min-height: 40px; border: 1px solid var(--borda-forte); background: var(--superficie); border-radius: 9px; }
   .filtro-periodo .segmento--calendario[aria-pressed="true"] { box-shadow: none; }
 }
+
+/* Coisas que aparecem só no computador ou só no celular */
+.so-celular { display: none !important; }
+.botao-icone {
+  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; cursor: pointer;
+  border: 1px solid var(--borda-forte); border-radius: 9px; background: var(--superficie); color: var(--texto);
+}
+.botao-icone:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+  .so-computador { display: none !important; }
+  .so-celular { display: inline-flex !important; }
+  .filtros-linha { flex-wrap: nowrap; }
+  .filtro-celular { min-width: 0; flex: 1 1 auto; }
+  .filtro-celular__atual { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .filtro-periodo { flex: none; }
+}
+@media (max-width: 380px) {
+  /* Celular estreito: sem período escolhido, o botão mostra só o ícone do calendário */
+  .periodo-rotulo { display: none; }
+  .filtro-periodo .segmento--calendario { padding: 0 11px; }
+}

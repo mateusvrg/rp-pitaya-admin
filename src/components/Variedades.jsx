@@ -151,7 +151,9 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
               <button type="button" className={`linha__faixa${selecionando && !todasMarcadas ? ' linha__faixa--parcial' : ''}`}
                 aria-pressed={todasMarcadas} aria-label={todasMarcadas ? 'Desmarcar todas' : 'Selecionar todas'} onClick={alternarTodas} />
               <span className="selecionar-todas__texto">
-                {selecionando ? `${listaMarcadas.length} de ${visiveis.length} selecionadas` : 'Use a faixa à esquerda para selecionar'}
+                {selecionando
+                  ? <>{listaMarcadas.length} de {visiveis.length}<span className="so-computador">&nbsp;selecionadas</span></>
+                  : <span className="so-computador">Use a faixa à esquerda para selecionar</span>}
               </span>
               <button type="button" className="selecionar-todas__botao" onClick={alternarTodas}>
                 {todasMarcadas ? 'Desmarcar todas' : `Selecionar todas (${visiveis.length})`}

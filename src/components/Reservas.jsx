@@ -120,7 +120,7 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
             <span className="sr-only">Buscar por nome ou telefone</span>
             <input type="search" placeholder="Buscar por nome ou telefone" value={busca} onChange={(e) => setBusca(e.target.value)} />
           </label>
-          <button type="button" className="botao botao--secundario" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}>
+          <button type="button" className="botao botao--secundario so-computador" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}>
             <IconeBaixar tamanho={18} /> <span>Planilha</span>
           </button>
         </div>
@@ -138,9 +138,9 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
           <div className="filtro-periodo">
             <div className="segmentos">
               <button type="button" className="segmento segmento--calendario" aria-pressed={Boolean(periodo)}
-                aria-expanded={calendarioAberto} onClick={() => setCalendarioAberto((a) => !a)}>
+                aria-expanded={calendarioAberto} aria-label={periodo ? undefined : "Período"} onClick={() => setCalendarioAberto((a) => !a)}>
                 <IconeCalendario tamanho={16} />
-                <span>{periodo ? `${curta(periodo.de)} – ${curta(periodo.ate)}` : 'Período'}</span>
+                {periodo ? <span>{`${curta(periodo.de)} – ${curta(periodo.ate)}`}</span> : <span className="periodo-rotulo">Período</span>}
               </button>
               {periodo && (
                 <button type="button" className="segmento segmento--limpar" onClick={() => setPeriodo(null)} aria-label="Tirar o filtro de período">
@@ -153,6 +153,11 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
                 aoAplicar={({ de, ate }) => { setPeriodo({ de, ate }); setCalendarioAberto(false) }} />
             )}
           </div>
+          {/* Celular: a planilha vira só o ícone, na mesma linha dos filtros */}
+          <button type="button" className="botao-icone so-celular" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}
+            aria-label="Baixar planilha" title="Baixar planilha">
+            <IconeBaixar tamanho={18} />
+          </button>
         </div>
 
         {visiveis.length === 0 ? (
@@ -167,7 +172,11 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
           <div className="selecionar-todas">
             <button type="button" className={`linha__faixa${selecionando && !todasMarcadas ? ' linha__faixa--parcial' : ''}`}
               aria-pressed={todasMarcadas} aria-label={todasMarcadas ? 'Desmarcar todas' : 'Selecionar todas'} onClick={alternarTodas} />
-            <span className="selecionar-todas__texto">{selecionando ? `${listaMarcadas.length} de ${visiveis.length} selecionadas` : 'Use a faixa à esquerda para selecionar'}</span>
+            <span className="selecionar-todas__texto">
+              {selecionando
+                ? <>{listaMarcadas.length} de {visiveis.length}<span className="so-computador">&nbsp;selecionadas</span></>
+                : <span className="so-computador">Use a faixa à esquerda para selecionar</span>}
+            </span>
             <button type="button" className="selecionar-todas__botao" onClick={alternarTodas}>
               {todasMarcadas ? 'Desmarcar todas' : `Selecionar todas (${visiveis.length})`}
             </button>
