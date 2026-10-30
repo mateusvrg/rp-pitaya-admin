@@ -692,3 +692,12 @@ body:has(.faixa-teste) { --topo-fixo: 28px; }
 @media (prefers-reduced-motion: reduce) {
   .barra-filtros .filtros-linha, .barra-filtros .filtro-seta, .filtro-seta svg { transition: none; }
 }
+
+/* ===== Celular: trocar de aba arrastando o dedo para o lado ===== */
+.conteudo-aba { transition: transform .22s ease, opacity .22s ease; }
+.aba-entra-direita { animation: aba-entra-direita .3s cubic-bezier(.2, .8, .3, 1); }
+.aba-entra-esquerda { animation: aba-entra-esquerda .3s cubic-bezier(.2, .8, .3, 1); }
+@keyframes aba-entra-direita { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: none; } }
+@keyframes aba-entra-esquerda { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: none; } }
+@media (min-width: 960px) { .aba-entra-direita, .aba-entra-esquerda { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .conteudo-aba { transition: none; } .aba-entra-direita, .aba-entra-esquerda { animation: none; } }

@@ -6,8 +6,10 @@ import { aplicarTema, lerTema } from '../lib/tema'
 import { Dashboard } from './Dashboard'
 import { Reservas } from './Reservas'
 import { Variedades } from './Variedades'
+import { useDeslizarAbas } from './useDeslizarAbas'
 import { IconeAtualizar, IconeAuto, IconeDashboard, IconeLua, IconeReservas, IconeSair, IconeSol, IconeVariedades } from './Icones'
 
+const IDS_ABAS = ['dashboard', 'reservas', 'variedades']
 const ABAS = [
   { id: 'dashboard', nome: 'Dashboard', Icone: IconeDashboard },
   { id: 'reservas', nome: 'Reservas', Icone: IconeReservas },
@@ -85,6 +87,7 @@ export function Painel() {
   const novas = reservas.filter((r) => r.status === 'nova').length
   const email = sessaoAtual()?.usuario?.email
   const tituloAba = ABAS.find((a) => a.id === rota.aba)?.nome
+  const deslizar = useDeslizarAbas(IDS_ABAS, rota.aba, irPara)
 
   const navegacao = (classe) => (
     <nav className={classe} aria-label="Seções do painel">
@@ -126,7 +129,7 @@ export function Painel() {
         </div>
       </header>
 
-      <main className="principal">
+      <main className="principal" ref={deslizar.area}>
         {status === 'carregando' && <div className="estado"><span className="girando" aria-hidden="true" /> Carregando...</div>}
         {status === 'erro' && (
           <div className="estado" role="alert">
@@ -143,12 +146,14 @@ export function Painel() {
                 <span>Atualizado às {atualizadoEm?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
               </button>
             </div>
+            <div className={`conteudo-aba ${deslizar.classe}`} style={deslizar.estilo}>
             {rota.aba === 'dashboard' && <Dashboard reservas={reservas} produtos={produtos} irPara={irPara} />}
             {rota.aba === 'reservas' && (
               <Reservas key={filtroInicial ?? 'padrao'} reservas={reservas} filtroInicial={filtroInicial}
                 selecionada={rota.id} aoSelecionar={abrirReserva} aoAtualizar={trocarReserva} />
             )}
             {rota.aba === 'variedades' && <Variedades produtos={produtos} reservas={reservas} aoSalvar={trocarProduto} />}
+            </div>
           </>
         )}
       </main>
