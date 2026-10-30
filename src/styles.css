@@ -702,19 +702,29 @@ body:has(.faixa-teste) { --topo-fixo: 28px; }
 @media (min-width: 960px) { .aba-entra-direita, .aba-entra-esquerda { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .conteudo-aba { transition: none; } .aba-entra-direita, .aba-entra-esquerda { animation: none; } }
 
-/* Rodapé da lista: mostrar mais / todas / recolher */
+/* Rodapé da lista: 10/25 · +5 · Todas · Recolher */
 .mais-itens {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-  padding: 12px 16px; border-top: 1px solid var(--borda); background: var(--superficie-2);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 10px 8px 16px; border-top: 1px solid var(--borda);
 }
-.mais-itens__conta { font-size: 13px; color: var(--texto-3); }
-.mais-itens__botoes { display: flex; gap: 8px; flex-wrap: wrap; }
-.mais-itens .botao { min-height: 36px; padding: 0 12px; font-size: 13.5px; }
-@media (max-width: 640px) {
-  .mais-itens { flex-direction: column; align-items: stretch; }
-  .mais-itens__conta { text-align: center; }
-  .mais-itens__botoes .botao { flex: 1 1 0; }
+.mais-itens__conta { font-size: 13px; color: var(--texto-3); font-variant-numeric: tabular-nums; }
+.mais-itens__conta strong { color: var(--texto); font-weight: 600; }
+.mais-itens__acoes { display: flex; align-items: center; gap: 2px; }
+.mais-itens__acao {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 0 12px; border: 0; border-radius: 17px;
+  background: none; color: var(--destaque); font: 600 13.5px var(--fonte); cursor: pointer; transition: background .15s;
 }
+.mais-itens__acao:hover { background: var(--destaque-suave); }
+.mais-itens__acao--recolher { color: var(--texto-2); }
+.mais-itens__acao--recolher svg { transform: rotate(180deg); }
+.mais-itens__acao--recolher:hover { background: var(--superficie-2); }
+
+/* Linhas que acabaram de aparecer entram deslizando; ao recolher, as de baixo saem */
+.linha-entra { animation: linha-entra .3s cubic-bezier(.2, .8, .3, 1) backwards; }
+.linha-sai { animation: linha-sai .24s ease-in forwards; }
+@keyframes linha-entra { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes linha-sai { to { opacity: 0; transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .linha-entra, .linha-sai { animation: none; } }
 
 /* A animação de troca de aba não pode deixar a página mais larga que a tela
    (isso fazia o navegador do celular "afastar o zoom" e a barra de baixo encolher por um instante). */

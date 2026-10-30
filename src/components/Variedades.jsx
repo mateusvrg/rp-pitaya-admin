@@ -4,7 +4,7 @@ import { AcoesVariedades } from './AcoesVariedades'
 import { DetalheVariedade } from './DetalheVariedade'
 import { FiltroCelular } from './FiltroCelular'
 import { useBarraFixa } from './useBarraFixa'
-import { MaisItens, POR_PAGINA } from './MaisItens'
+import { MaisItens, usePaginacao } from './MaisItens'
 import { FormProduto } from './FormProduto'
 import { IconeBusca, IconeSetaBaixo, IconeFoto, IconeMais, IconeVariedades } from './Icones'
 
@@ -27,9 +27,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
   const [recado, setRecado] = useState('')
   const ultima = useRef(null)
 
-  // Lista mostra 10 por vez; trocar de filtro ou buscar volta para 10.
-  const [limite, setLimite] = useState(POR_PAGINA)
-  useEffect(() => { setMarcadas(new Set()); ultima.current = null; setLimite(POR_PAGINA) }, [filtro, busca])
+  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca])
   useEffect(() => { if (marcadas.size === 0) setAcoesAbertas(false) }, [marcadas])
   useEffect(() => {
     if (!recado) return
@@ -58,6 +56,8 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
     const f = FILTROS.find((x) => x.id === filtro)
     return produtos.filter((p) => f.passa(p) && (!termo || semAcento(p.nome).includes(termo)))
   }, [produtos, filtro, busca])
+  // Lista mostra 10 por vez; trocar de filtro ou buscar volta para 10.
+  const pag = usePaginacao(visiveis.length, [filtro, busca])
 
   const selecionando = marcadas.size > 0
   const listaMarcadas = visiveis.filter((p) => marcadas.has(p.id))
@@ -175,10 +175,10 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
               </button>
             </div>
             <ul aria-label={`${visiveis.length} variedades`}>
-              {visiveis.slice(0, limite).map((p, i) => {
+              {visiveis.slice(0, pag.limite).map((p, i) => {
                 const n = numeros[p.id]?.reservadas ?? 0
                 return (
-                  <li key={p.id} className={marcadas.has(p.id) ? 'linha-marcada' : undefined}>
+                  <li key={p.id} {...pag.linha(i)} className={[marcadas.has(p.id) && 'linha-marcada', pag.linha(i).className].filter(Boolean).join(' ') || undefined}>
                     <button type="button" className="linha__faixa" aria-pressed={marcadas.has(p.id)}
                       aria-label={`Selecionar ${p.nome}`} onClick={(e) => clicarFaixa(e, i)} />
                     <button type="button" className={`linha linha--variedade${p.ativo ? '' : ' linha--apagada'}`}
@@ -202,7 +202,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
                 )
               })}
             </ul>
-            <MaisItens mostrando={Math.min(limite, visiveis.length)} total={visiveis.length} setLimite={setLimite} />
+            <MaisItens pag={pag} />
           </div>
         )}
       </div>
