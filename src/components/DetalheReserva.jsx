@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { STATUS, atualizarReserva } from '../lib/dados'
+import { STATUS, atualizarReserva, canalDe, nomeCanal } from '../lib/dados'
 import { dataHora, linkWhatsApp, reais, telefone, unidades } from '../lib/formato'
 import { IconeFechar, IconeLocal, IconeTelefone, IconeVoltar, IconeWhatsApp } from './Icones'
 
@@ -39,7 +39,7 @@ export function DetalheReserva({ reserva: r, aoFechar, aoAtualizar }) {
         <button type="button" className="botao-fantasma detalhe__voltar" onClick={aoFechar} aria-label="Voltar para a lista"><IconeVoltar /></button>
         <div className="detalhe__titulo">
           <h2 ref={titulo} tabIndex={-1}>{r.nome}</h2>
-          <p>Reservou em {dataHora(r.criado_em)}{r.origem === 'manual' ? ' · lançada pelo painel' : r.origem === 'importada' ? ' · importada de planilha' : ''}</p>
+          <p>Reservou em {dataHora(r.criado_em)}{canalDe(r) !== 'site' ? ` · pelo ${nomeCanal(canalDe(r))}` : r.origem === 'manual' ? ' · lançada pelo painel' : ''}</p>
         </div>
         <button type="button" className="botao-fantasma detalhe__fechar" onClick={aoFechar} aria-label="Fechar detalhe"><IconeFechar /></button>
       </div>

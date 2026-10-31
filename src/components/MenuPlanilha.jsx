@@ -27,7 +27,7 @@ export function MenuPlanilha({ total, aoImportar, aoExportar }) {
         <div className="menu-planilha__opcoes" role="menu">
           <button type="button" role="menuitem" onClick={() => escolher(aoImportar)}>
             <IconeEnviar tamanho={18} />
-            <span><strong>Importar planilha</strong><span>Reservas anotadas do WhatsApp</span></span>
+            <span><strong>Importar planilha</strong><span>WhatsApp, Instagram ou outro lugar</span></span>
           </button>
           <button type="button" role="menuitem" disabled={total === 0} onClick={() => escolher(aoExportar)}>
             <IconeBaixar tamanho={18} />

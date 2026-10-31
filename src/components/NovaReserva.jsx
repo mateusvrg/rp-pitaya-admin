@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { STATUS, lancarReservas } from '../lib/dados'
 import { fotoDe, reais } from '../lib/formato'
 import { normalizarWhatsApp, lerNumero } from '../lib/importar'
-import { IconeFechar, IconeFoto, IconeVoltar } from './Icones'
+import { IconeFechar, IconeFoto, IconeVoltar, IconeWhatsApp, IconeInstagram } from './Icones'
 
 // "2026-10-31T14:05" no fuso de quem está usando (para o campo de data e hora).
 const paraCampo = (d) => {
@@ -23,7 +23,7 @@ function mascara(v) {
 export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
   const vars = produtos.filter((p) => p.ativo || p.disponivel)
   const [f, setF] = useState(() => ({
-    nome: '', whatsapp: '', modo: 'retirada', endereco: '', status: 'nova', data: paraCampo(new Date()), observacao: '',
+    nome: '', whatsapp: '', canal: null, modo: 'retirada', endereco: '', status: 'nova', data: paraCampo(new Date()), observacao: '',
   }))
   const [qtd, setQtd] = useState({})
   const [precos, setPrecos] = useState(() => Object.fromEntries(vars.map((p) => [p.id, precoTexto(p.preco_unidade)])))
@@ -67,7 +67,7 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
       await lancarReservas([{
         nome: f.nome.trim().replace(/\s+/g, ' '), whatsapp: w.numero, modo: f.modo,
         endereco: f.modo === 'entrega' ? f.endereco.trim() || null : null,
-        status: f.status, data: data.toISOString(), observacao: f.observacao.trim() || null,
+        canal: f.canal ?? 'site', status: f.status, data: data.toISOString(), observacao: f.observacao.trim() || null,
         itens: itens.map((i) => ({ produto_id: i.produto.id, quantidade: i.quantidade, preco: i.preco })),
       }], 'manual')
       aoLancar(f.nome.trim().split(' ')[0])
@@ -83,7 +83,7 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
         <button type="button" className="botao-fantasma detalhe__voltar" onClick={aoCancelar} aria-label="Voltar para a lista"><IconeVoltar /></button>
         <div className="detalhe__titulo">
           <h2 ref={titulo} tabIndex={-1}>Nova reserva</h2>
-          <p>Para reservas combinadas pelo WhatsApp</p>
+          <p>Lançar à mão uma reserva combinada fora do site</p>
         </div>
         <button type="button" className="botao-fantasma detalhe__fechar" onClick={aoCancelar} aria-label="Fechar"><IconeFechar /></button>
       </div>
@@ -97,6 +97,18 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
             <input className="campo" type="tel" inputMode="tel" value={f.whatsapp} autoComplete="off" placeholder="(34) 99999-8888"
               onChange={(e) => setF((x) => ({ ...x, whatsapp: mascara(e.target.value) }))} />
           </label>
+          {/* Por onde chegou: tocar de novo desmarca. Sem nada marcado, conta como reserva do site. */}
+          <div className="campo-rotulo">
+            <span>Veio por <span className="apoio">(sem marcar = site)</span></span>
+            <div className="canal-escolha" role="group" aria-label="Por onde a reserva chegou">
+              {[['whatsapp', 'WhatsApp', IconeWhatsApp], ['instagram', 'Instagram', IconeInstagram]].map(([id, nome, Icone]) => (
+                <button key={id} type="button" className={`canal-opcao canal-opcao--${id}`} aria-pressed={f.canal === id}
+                  onClick={() => setF((x) => ({ ...x, canal: x.canal === id ? null : id }))}>
+                  <Icone tamanho={17} />{nome}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <fieldset className="bloco">

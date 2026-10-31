@@ -951,3 +951,24 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--rolagem); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background-color: var(--rolagem-hover); }
+/* Filtros: status numa linha; canal e período na linha de baixo (não pula de lugar quando os números mudam) */
+.filtros-quebra { flex-basis: 100%; height: 0; }
+@media (max-width: 640px) { .filtros-quebra { display: none; } }
+.origem-tag--instagram { color: #B4337A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .origem-tag--instagram { color: #E879B0; } }
+:root[data-theme="dark"] .origem-tag--instagram { color: #E879B0; }
+.canal-escolha { display: flex; gap: 8px; }
+.canal-opcao {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 12px; cursor: pointer;
+  border: 1px solid var(--borda-forte); border-radius: 8px; background: var(--superficie); color: var(--texto-2); font: 500 14px var(--fonte);
+}
+.canal-opcao:hover { background: var(--superficie-2); color: var(--texto); }
+.canal-opcao[aria-pressed="true"] { border-color: var(--destaque); background: var(--destaque-suave); color: var(--texto); box-shadow: inset 0 0 0 1px var(--destaque); }
+.canal-opcao--whatsapp[aria-pressed="true"] svg { color: #1FA855; }
+.canal-opcao--instagram[aria-pressed="true"] svg { color: #D62976; }
+/* Status sempre numa linha só (a altura não muda quando os números mudam); se não couber, rola para o lado */
+@media (min-width: 641px) {
+  .segmentos--status { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .segmentos--status::-webkit-scrollbar { display: none; }
+  .segmentos--status .segmento { flex: none; }
+}

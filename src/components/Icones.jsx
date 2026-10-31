@@ -27,6 +27,6 @@ export const IconeCalendario = (p) => <Svg {...p}><rect x="3.5" y="5" width="17"
 export const IconeFiltro = (p) => <Svg {...p}><path d="M4 6h16M7 12h10M10 18h4" /></Svg>
 export const IconeSetaBaixo = (p) => <Svg {...p}><path d="M6 9l6 6 6-6" /></Svg>
 export const IconeEnviar = (p) => <Svg {...p}><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5" /><path d="M5 19.5h14" /></Svg>
-export const IconeWhatsAppPequeno = (p) => <Svg tamanho={13} {...p}><path d="M20.5 11.6a8.4 8.4 0 0 1-12.3 7.4L3.5 20.5l1.6-4.6a8.4 8.4 0 1 1 15.4-4.3z" /></Svg>
+export const IconeInstagram = (p) => <Svg {...p}><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="3.8" /><circle cx="17.2" cy="6.8" r=".6" fill="currentColor" /></Svg>
 export const IconePlanilha = (p) => <Svg {...p}><path d="M8 19.5V5M4.5 8.5L8 5l3.5 3.5" /><path d="M16 4.5V19M12.5 15.5L16 19l3.5-3.5" /></Svg>
 export const IconeEditar = (p) => <Svg {...p}><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></Svg>

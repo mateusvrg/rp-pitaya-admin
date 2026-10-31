@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ORIGENS, STATUS, nomeStatus, pelaOrigem } from '../lib/dados'
+import { CANAIS, STATUS, canalDe, nomeStatus, peloCanal } from '../lib/dados'
 import { exportarReservas } from '../lib/importar'
 import { dataHora, reais, resumoItens, semAcento } from '../lib/formato'
 import { DetalheReserva } from './DetalheReserva'
@@ -11,7 +11,7 @@ import { Calendario } from './Calendario'
 import { FiltroCelular } from './FiltroCelular'
 import { useBarraFixa } from './useBarraFixa'
 import { MaisItens, usePaginacao } from './MaisItens'
-import { IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas, IconeMais, IconeWhatsAppPequeno } from './Icones'
+import { IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas, IconeMais, IconeWhatsApp, IconeInstagram } from './Icones'
 
 // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
 const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...(d.getFullYear() !== new Date().getFullYear() && { year: '2-digit' }) })
@@ -29,7 +29,7 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
   const [acoesAbertas, setAcoesAbertas] = useState(false) // celular: painel de ações em tela cheia
   const [periodo, setPeriodo] = useState(null) // { de, ate } escolhido no calendário, ou null = qualquer data
   const [calendarioAberto, setCalendarioAberto] = useState(false)
-  const [origem, setOrigem] = useState(null) // null = todas, 'site' ou 'whatsapp'
+  const [canal, setCanal] = useState(null) // null = todos, 'site', 'whatsapp' ou 'instagram'
   const [lancando, setLancando] = useState(null) // null | 'nova' | 'importar' (painel da direita)
 
   // Abrir uma reserva da lista fecha o formulário de nova reserva / importação.
@@ -38,7 +38,7 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
   const lancou = (texto) => { setLancando(null); setRecado(texto); aoRecarregar() }
 
   // Trocar de filtro ou buscar limpa a seleção, para não agir em reservas que não estão na tela.
-  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca, periodo, origem])
+  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca, periodo, canal])
   useEffect(() => { if (marcadas.size === 0) setAcoesAbertas(false) }, [marcadas])
 
   useEffect(() => {
@@ -54,9 +54,9 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
     const fim = new Date(periodo.ate); fim.setHours(23, 59, 59, 999)
     return reservas.filter((r) => { const d = new Date(r.criado_em); return d >= inicio && d <= fim })
   }, [reservas, periodo])
-  // Origem: feitas no site ou lançadas pelo painel (WhatsApp).
-  const origens = ORIGENS.map((o) => ({ ...o, qtd: noPeriodo.filter((r) => pelaOrigem(r, o.id)).length }))
-  const doPeriodo = useMemo(() => noPeriodo.filter((r) => pelaOrigem(r, origem)), [noPeriodo, origem])
+  // Canal: por onde a reserva chegou (site, WhatsApp ou Instagram).
+  const canais = CANAIS.map((c) => ({ ...c, qtd: noPeriodo.filter((r) => peloCanal(r, c.id)).length }))
+  const doPeriodo = useMemo(() => noPeriodo.filter((r) => peloCanal(r, canal)), [noPeriodo, canal])
 
   const contagem = useMemo(() => {
     const c = Object.fromEntries(STATUS.map((s) => [s.id, 0]))
@@ -81,7 +81,7 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
     })
   }, [doPeriodo, filtro, busca])
   // Lista mostra 10 por vez; trocar de filtro ou buscar volta para 10.
-  const pag = usePaginacao(visiveis.length, [filtro, busca, periodo, origem])
+  const pag = usePaginacao(visiveis.length, [filtro, busca, periodo, canal])
 
   const atual = reservas.find((r) => r.id === selecionada) ?? null
   const selecionando = marcadas.size > 0
@@ -157,8 +157,8 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
 
         <div className="filtros-linha">
           <FiltroCelular titulo="Filtrar reservas" opcoes={filtros} valor={filtro} aoEscolher={setFiltro}
-            extras={{ titulo: 'Origem', opcoes: origens, valor: origem, aoEscolher: (id) => setOrigem((o) => (o === id ? null : id)) }} />
-          <div className="segmentos segmentos--filtros" role="group" aria-label="Filtrar por status">
+            extras={{ titulo: 'Canal', opcoes: canais, valor: canal, aoEscolher: (id) => setCanal((c) => (c === id ? null : id)) }} />
+          <div className="segmentos segmentos--filtros segmentos--status" role="group" aria-label="Filtrar por status">
             {filtros.map((f) => (
               <button key={f.id} type="button" className="segmento" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>
                 {f.nome}<span className="segmento__qtd">{f.qtd}</span>
@@ -166,11 +166,13 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
             ))}
           </div>
 
-          <div className="segmentos segmentos--filtros" role="group" aria-label="Filtrar por origem">
-            {origens.map((o) => (
-              <button key={o.id} type="button" className="segmento" aria-pressed={origem === o.id}
-                title={o.id === 'site' ? 'Só reservas feitas no site' : 'Só reservas lançadas pelo painel (WhatsApp)'}
-                onClick={() => setOrigem((x) => (x === o.id ? null : o.id))}>
+          {/* Cada grupo numa linha: status em cima; canal e período embaixo */}
+          <span className="filtros-quebra" aria-hidden="true" />
+          <div className="segmentos segmentos--filtros" role="group" aria-label="Filtrar por canal">
+            {canais.map((o) => (
+              <button key={o.id} type="button" className="segmento" aria-pressed={canal === o.id}
+                title={`Só reservas que chegaram pelo ${o.nome}`}
+                onClick={() => setCanal((x) => (x === o.id ? null : o.id))}>
                 {o.nome}<span className="segmento__qtd">{o.qtd}</span>
               </button>
             ))}
@@ -200,8 +202,8 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
         {visiveis.length === 0 ? (
           <div className="vazio">
             <p>{busca ? `Nenhuma reserva encontrada para "${busca}".` : periodo ? 'Nenhuma reserva neste filtro e período.' : 'Nenhuma reserva neste filtro.'}</p>
-            {(busca || filtro !== 'todas' || periodo || origem) && (
-              <button type="button" className="link" onClick={() => { setBusca(''); setFiltro('todas'); setPeriodo(null); setOrigem(null) }}>Ver todas</button>
+            {(busca || filtro !== 'todas' || periodo || canal) && (
+              <button type="button" className="link" onClick={() => { setBusca(''); setFiltro('todas'); setPeriodo(null); setCanal(null) }}>Ver todas</button>
             )}
           </div>
         ) : (
@@ -235,7 +237,8 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
                   </span>
                   <span className="linha__data">
                     {dataHora(r.criado_em)}
-                    {r.origem && r.origem !== 'site' && <span className="origem-tag" title={r.origem === 'importada' ? 'Importada de planilha' : 'Lançada pelo painel'}><IconeWhatsAppPequeno />WhatsApp</span>}
+                    {canalDe(r) === 'whatsapp' && <span className="origem-tag"><IconeWhatsApp tamanho={13} />WhatsApp</span>}
+                    {canalDe(r) === 'instagram' && <span className="origem-tag origem-tag--instagram"><IconeInstagram tamanho={13} />Instagram</span>}
                   </span>
                 </a>
               </li>

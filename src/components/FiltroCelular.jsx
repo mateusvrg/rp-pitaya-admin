@@ -5,7 +5,7 @@ import { IconeFiltro, IconeSetaBaixo } from './Icones'
 // flutuando no lado esquerdo da tela, logo abaixo do botão (com o fundo levemente escurecido). Tocar fora fecha.
 // No computador este botão fica escondido e aparecem os segmentos normais.
 // variante="seta": só um botão com setinha (fica ao lado da busca, que continua fixa ao rolar a tela).
-// extras (opcional): um segundo grupo de opções que liga/desliga, ex.: origem { titulo, opcoes, valor, aoEscolher }.
+// extras (opcional): um segundo grupo de opções que liga/desliga, ex.: canal { titulo, opcoes, valor, aoEscolher }.
 export function FiltroCelular({ titulo = 'Filtrar', opcoes, valor, aoEscolher, variante, extras }) {
   const [topo, setTopo] = useState(null) // posição (px) onde começa a pilha de botões; null = fechado
   const ref = useRef(null)

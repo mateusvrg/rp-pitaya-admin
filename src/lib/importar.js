@@ -1,5 +1,5 @@
 // Transforma as linhas da planilha em reservas, conferindo cada uma antes de mandar para o banco.
-import { STATUS } from './dados'
+import { STATUS, canalDe, nomeCanal } from './dados'
 import { gerarXlsx, baixarArquivo } from './planilha'
 import { semAcento, telefone } from './formato'
 
@@ -68,6 +68,7 @@ function mapearColunas(cabecalho, produtos) {
     else if (/^(recebimento|entrega ou retirada|modo|tipo)/.test(k)) mapa.modo ??= i
     else if (/^(endereco|local)/.test(k)) mapa.endereco ??= i
     else if (/^(status|situacao)/.test(k)) mapa.status ??= i
+    else if (/^(canal|veio|origem)/.test(k)) mapa.canal ??= i
     else if (/^(anotac|observ|obs)/.test(k)) mapa.observacao ??= i
   })
   return mapa
@@ -101,6 +102,11 @@ export function validarLinha(b, produtos) {
   const status = statusTexto ? STATUS_POR_NOME[statusTexto] : 'nova'
   if (!status) erro('status', `status "${t(b.status)}" não existe`)
 
+  // Canal: por onde chegou. Em branco = WhatsApp (a planilha é onde se anota o que chega por fora do site).
+  const canalTexto = chave(b.canal)
+  const canal = !canalTexto ? 'whatsapp' : /^(whats|zap|wpp|wa$)/.test(canalTexto) ? 'whatsapp' : /^(insta|ig$)/.test(canalTexto) ? 'instagram' : /^site/.test(canalTexto) ? 'site' : null
+  if (!canal) erro('canal', `canal "${t(b.canal)}" não existe (use WhatsApp, Instagram ou Site)`)
+
   const d = lerData(t(b.data))
   if (d.erro) erro('data', d.erro)
   const data = d.data ?? new Date()
@@ -123,7 +129,7 @@ export function validarLinha(b, produtos) {
   if (itens.length === 0 && !erros.some((e) => e.startsWith('quantidade'))) erro('qtd', 'nenhuma quantidade preenchida')
 
   return {
-    linha: b.linha, nome, whatsapp: w.numero, whatsappOk: w.ok, modo, endereco: modo === 'entrega' ? endereco : '', status: status ?? 'nova',
+    linha: b.linha, nome, whatsapp: w.numero, whatsappOk: w.ok, modo, endereco: modo === 'entrega' ? endereco : '', status: status ?? 'nova', canal: canal ?? 'whatsapp',
     data: d.data ? data : null, dataUsada: data, observacao: t(b.observacao), itens,
     total: itens.reduce((s, i) => s + i.quantidade * i.preco, 0), erros, avisos, camposErrados, bruto: b,
   }
@@ -170,7 +176,7 @@ export function interpretar(linhas, produtos, existentes = []) {
       linha: iCab + j + 2,
       data: lida.data ? dataTexto(lida.data) : textoData,
       nome: pega(l, mapa.nome), whatsapp: pega(l, mapa.whatsapp).replace(/\.0+$/, ''), modo: pega(l, mapa.modo),
-      endereco: pega(l, mapa.endereco), status: pega(l, mapa.status), observacao: pega(l, mapa.observacao),
+      endereco: pega(l, mapa.endereco), status: pega(l, mapa.status), canal: pega(l, mapa.canal), observacao: pega(l, mapa.observacao),
       qtd: Object.fromEntries(Object.entries(mapa.produtos).map(([id, col]) => [id, pega(l, col)])),
       preco: Object.fromEntries(Object.entries(mapa.precos).map(([id, col]) => [id, pega(l, col)])),
     }
@@ -182,7 +188,7 @@ export function interpretar(linhas, produtos, existentes = []) {
 
 // Formato que a função lancar_reservas do banco espera.
 export const paraBanco = (r) => ({
-  linha: r.linha, nome: r.nome, whatsapp: r.whatsapp, modo: r.modo, endereco: r.endereco || null, status: r.status,
+  linha: r.linha, nome: r.nome, whatsapp: r.whatsapp, modo: r.modo, endereco: r.endereco || null, status: r.status, canal: r.canal,
   data: r.data ? r.data.toISOString() : null, observacao: r.observacao || null,
   itens: r.itens.map((i) => ({ produto_id: i.produto_id, quantidade: i.quantidade, preco: i.preco })),
 })
@@ -200,6 +206,7 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     { titulo: 'Endereço', largura: 34 },
     ...vars.map((p) => ({ titulo: p.nome, largura: Math.max(12, p.nome.length + 3), estilo: 'numero' })),
     { titulo: 'Status', largura: 13, lista: STATUS.map((s) => s.nome) },
+    { titulo: 'Canal', largura: 12, lista: ['WhatsApp', 'Instagram', 'Site'] },
     { titulo: 'Anotações', largura: 34 },
     ...vars.map((p) => ({ titulo: `Preço ${p.nome}`, largura: Math.max(14, p.nome.length + 9), estilo: 'dinheiro' })),
   ]
@@ -208,7 +215,7 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     return [
       new Date(r.criado_em), r.nome, telefone(r.whatsapp), r.modo === 'entrega' ? 'Entrega' : 'Retirada', r.endereco ?? '',
       ...vars.map((p) => item(p)?.quantidade ?? ''),
-      STATUS.find((s) => s.id === r.status)?.nome ?? '', r.observacao ?? '',
+      STATUS.find((s) => s.id === r.status)?.nome ?? '', nomeCanal(canalDe(r)), r.observacao ?? '',
       // Preço só aparece quando foi diferente do preço atual do site.
       ...vars.map((p) => (item(p) && item(p).preco !== p.preco_unidade ? item(p).preco : '')),
     ]
@@ -225,6 +232,7 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     ['Endereço: só para entrega. Pode ficar em branco se ainda não combinou.'],
     [`Colunas das variedades (${vars.map((p) => p.nome).join(', ')}): quantas unidades de cada uma. Deixe em branco o que a pessoa não pegou.`],
     ['Status: Nova, Em contato, Paga, Entregue ou Cancelada. Em branco = Nova.'],
+    ['Canal: por onde a reserva chegou: WhatsApp, Instagram ou Site. Em branco = WhatsApp.'],
     ['Anotações: qualquer observação (ex.: pagou metade no Pix).'],
     [`Colunas "Preço ...": só se combinou um preço diferente do site (ex.: Preço ${exemplo} = 8,00). Em branco = preço do site.`],
     [''],

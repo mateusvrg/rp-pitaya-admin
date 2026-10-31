@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { STATUS, lancarReservas, nomeStatus } from '../lib/dados'
+import { CANAIS, STATUS, lancarReservas, nomeCanal, nomeStatus } from '../lib/dados'
 import { lerPlanilha } from '../lib/planilha'
 import { baixarModelo, interpretar, marcarRepetidas, paraBanco, validarLinha } from '../lib/importar'
 import { reais, semAcento, telefone } from '../lib/formato'
@@ -77,7 +77,7 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
         <button type="button" className="botao-fantasma detalhe__voltar" onClick={aoCancelar} aria-label="Voltar para a lista"><IconeVoltar /></button>
         <div className="detalhe__titulo">
           <h2 ref={titulo} tabIndex={-1}>Importar planilha</h2>
-          <p>Reservas anotadas do WhatsApp</p>
+          <p>WhatsApp, Instagram ou outro lugar</p>
         </div>
         <button type="button" className="botao-fantasma detalhe__fechar" onClick={aoCancelar} aria-label="Fechar"><IconeFechar /></button>
       </div>
@@ -141,7 +141,7 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
                       </span>
                       <span className="importar__det">
                         {[r.whatsappOk ? telefone(r.whatsapp) : r.whatsapp, r.itens.map((i) => `${i.quantidade} ${i.nome}`).join(', '),
-                          r.modo === 'entrega' ? 'Entrega' : 'Retirada', nomeStatus(r.status), r.data && dataCurta(r.data)].filter(Boolean).join(' · ')}
+                          r.modo === 'entrega' ? 'Entrega' : 'Retirada', nomeStatus(r.status), nomeCanal(r.canal), r.data && dataCurta(r.data)].filter(Boolean).join(' · ')}
                       </span>
                       {r.erros.map((e) => <span key={e} className="importar__msg importar__msg--erro">{e}</span>)}
                       {!r.erros.length && r.repetida && (
@@ -208,6 +208,9 @@ function CorrigirLinha({ reserva: r, produtos, aoSalvar, aoCancelar, aoTirar }) 
   const modoValido = ['', 'entrega', 'retirada'].includes(semAcento(b.modo ?? '').trim()) || /^(entreg|retir)/.test(semAcento(b.modo ?? ''))
   const statusValido = !b.status || STATUS.some((s) => [semAcento(s.nome), semAcento(s.plural)].includes(semAcento(b.status).trim()))
   const valorModo = /^entreg/.test(semAcento(b.modo ?? '')) ? 'Entrega' : /^(retir|sitio|busca)/.test(semAcento(b.modo ?? '')) ? 'Retirada' : b.modo
+  const canalChave = semAcento(b.canal ?? '').trim()
+  const valorCanal = !canalChave || /^(whats|zap|wpp)/.test(canalChave) ? '' : /^insta/.test(canalChave) ? 'Instagram' : /^site/.test(canalChave) ? 'Site' : b.canal
+  const canalValido = !b.canal || valorCanal !== b.canal || ['Instagram', 'Site'].includes(b.canal)
   const valorStatus = STATUS.find((s) => [semAcento(s.nome), semAcento(s.plural), s.id].includes(semAcento(b.status ?? '').trim()))?.nome ?? b.status
 
   return (
@@ -235,6 +238,13 @@ function CorrigirLinha({ reserva: r, produtos, aoSalvar, aoCancelar, aoTirar }) 
             <option value="">Nova</option>
             {STATUS.filter((s) => s.id !== 'nova').map((s) => <option key={s.id} value={s.nome}>{s.nome}</option>)}
             {!statusValido && <option value={b.status}>{b.status} (inválido)</option>}
+          </select>
+        </label>
+        <label className="campo-rotulo">Canal
+          <select className={classe('canal')} value={valorCanal || ''} onChange={mudar('canal')}>
+            <option value="">WhatsApp</option>
+            {CANAIS.filter((c) => c.id !== 'whatsapp').map((c) => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+            {!canalValido && <option value={b.canal}>{b.canal} (inválido)</option>}
           </select>
         </label>
         <label className="campo-rotulo corrigir__largo">Endereço
