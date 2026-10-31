@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-import { lancarReservas, nomeStatus } from '../lib/dados'
+import { STATUS, lancarReservas, nomeStatus } from '../lib/dados'
 import { lerPlanilha } from '../lib/planilha'
-import { baixarModelo, interpretar, paraBanco } from '../lib/importar'
-import { reais, telefone } from '../lib/formato'
-import { IconeBaixar, IconeFechar, IconeVoltar, IconeEnviar } from './Icones'
+import { baixarModelo, interpretar, marcarRepetidas, paraBanco, validarLinha } from '../lib/importar'
+import { reais, semAcento, telefone } from '../lib/formato'
+import { IconeBaixar, IconeFechar, IconeVoltar, IconeEnviar, IconeEditar } from './Icones'
 
 const dataCurta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 
-// Importar várias reservas de uma planilha (.xlsx ou .csv): escolhe o arquivo, confere e grava.
+// Importar várias reservas de uma planilha (.xlsx ou .csv): escolhe o arquivo, confere, corrige aqui mesmo e grava.
 export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar }) {
   const [arquivo, setArquivo] = useState(null)
   const [lendo, setLendo] = useState(false)
-  const [resultado, setResultado] = useState(null) // { problemas, reservas }
+  const [problemas, setProblemas] = useState([])
+  const [lista, setLista] = useState(null) // reservas lidas (e corrigidas) da planilha
+  const [editando, setEditando] = useState(null) // número da linha aberta para corrigir
   const [pularRepetidas, setPularRepetidas] = useState(true)
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
@@ -21,16 +23,17 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
 
   useEffect(() => { titulo.current?.focus({ preventScroll: true }) }, [])
   useEffect(() => {
-    const tecla = (e) => { if (e.key === 'Escape') aoCancelar() }
+    const tecla = (e) => { if (e.key === 'Escape' && !editando) aoCancelar() }
     window.addEventListener('keydown', tecla)
     return () => window.removeEventListener('keydown', tecla)
-  }, [aoCancelar])
+  }, [aoCancelar, editando])
 
   const abrir = async (a) => {
     if (!a) return
-    setArquivo(a); setErro(''); setResultado(null); setLendo(true)
+    setArquivo(a); setErro(''); setLista(null); setProblemas([]); setEditando(null); setLendo(true)
     try {
-      setResultado(interpretar(await lerPlanilha(a), produtos, reservas))
+      const r = interpretar(await lerPlanilha(a), produtos, reservas)
+      setProblemas(r.problemas); setLista(r.reservas.length ? r.reservas : null)
     } catch (e) {
       setErro(e.message || 'Não consegui ler esse arquivo.')
     } finally {
@@ -39,10 +42,20 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
     }
   }
 
-  const lista = resultado?.reservas ?? []
-  const comErro = lista.filter((r) => r.erros.length)
-  const repetidas = lista.filter((r) => r.repetida && !r.erros.length)
-  const paraGravar = lista.filter((r) => !r.erros.length && !(pularRepetidas && r.repetida))
+  // Corrigir ou tirar uma linha: confere de novo e refaz a busca por repetidas.
+  const corrigir = (linha, bruto) => {
+    setLista((l) => marcarRepetidas(l.map((r) => (r.linha === linha ? validarLinha(bruto, produtos) : r)), reservas))
+    setEditando(null)
+  }
+  const tirar = (linha) => {
+    setLista((l) => { const n = marcarRepetidas(l.filter((r) => r.linha !== linha), reservas); return n.length ? n : null })
+    setEditando(null)
+  }
+
+  const itens = lista ?? []
+  const comErro = itens.filter((r) => r.erros.length)
+  const repetidas = itens.filter((r) => r.repetida && !r.erros.length)
+  const paraGravar = itens.filter((r) => !r.erros.length && !(pularRepetidas && r.repetida))
   const total = paraGravar.reduce((s, r) => s + r.total, 0)
   const unidades = paraGravar.reduce((s, r) => s + r.itens.reduce((t, i) => t + i.quantidade, 0), 0)
 
@@ -70,7 +83,7 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
       </div>
 
       <div className="detalhe__corpo">
-        {!resultado && (
+        {!lista && !problemas.length && (
           <ol className="importar__passos">
             <li>
               <span>Baixe o modelo e preencha uma linha por reserva, com a quantidade de cada variedade.</span>
@@ -78,14 +91,14 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
                 <IconeBaixar tamanho={16} /> Baixar modelo (.xlsx)
               </button>
             </li>
-            <li><span>Escolha a planilha preenchida. O painel mostra tudo antes de gravar.</span></li>
+            <li><span>Escolha a planilha preenchida. O painel mostra tudo antes de gravar e dá para corrigir aqui mesmo.</span></li>
           </ol>
         )}
 
-        <label className={`importar__area${arrastando ? ' importar__area--arrastando' : ''}${resultado ? ' importar__area--pequena' : ''}`}
+        <label className={`importar__area${arrastando ? ' importar__area--arrastando' : ''}${lista ? ' importar__area--pequena' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setArrastando(true) }} onDragLeave={() => setArrastando(false)} onDrop={soltar}>
-          <IconeEnviar tamanho={resultado ? 18 : 24} />
-          {resultado
+          <IconeEnviar tamanho={lista ? 18 : 24} />
+          {lista
             ? <span><strong>{arquivo?.name}</strong> · trocar arquivo</span>
             : <span><strong>Escolher planilha</strong><span className="so-computador"> ou arraste aqui</span><br /><span className="apoio">Excel (.xlsx) ou .csv</span></span>}
           <input ref={entrada} type="file" className="sr-only"
@@ -94,16 +107,16 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
         </label>
 
         {lendo && <p className="apoio"><span className="girando" aria-hidden="true" /> Lendo a planilha...</p>}
+        {problemas.map((p) => <p key={p} className="erro" role="alert">{p}</p>)}
 
-        {resultado?.problemas?.length > 0 && resultado.problemas.map((p) => <p key={p} className="erro" role="alert">{p}</p>)}
-
-        {lista.length > 0 && (
+        {lista && (
           <>
             <div className="importar__resumo" role="status">
-              <span><strong>{lista.length}</strong> {lista.length === 1 ? 'linha' : 'linhas'}</span>
+              <span><strong>{itens.length}</strong> {itens.length === 1 ? 'linha' : 'linhas'}</span>
               {comErro.length > 0 && <span className="importar__conta importar__conta--erro">{comErro.length} com erro</span>}
               {repetidas.length > 0 && <span className="importar__conta">{repetidas.length} já no sistema</span>}
             </div>
+            {comErro.length > 0 && <p className="apoio">Toque numa linha para corrigir.</p>}
 
             {repetidas.length > 0 && (
               <label className="marcar">
@@ -113,24 +126,33 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
             )}
 
             <ul className="importar__lista">
-              {lista.map((r) => {
+              {itens.map((r) => {
                 const pulada = !r.erros.length && pularRepetidas && r.repetida
+                const aberta = editando === r.linha
                 return (
-                  <li key={r.linha} className={r.erros.length ? 'importar__item--erro' : pulada ? 'importar__item--pulada' : undefined}>
-                    <div className="importar__linha">
-                      <span className="importar__num">{r.linha}</span>
-                      <span className="importar__nome">{r.nome || 'Sem nome'}</span>
-                      <span className="importar__total">{reais(r.total)}</span>
-                    </div>
-                    <div className="importar__det">
-                      {[telefone(r.whatsapp), r.itens.map((i) => `${i.quantidade} ${i.nome}`).join(', '),
-                        r.modo === 'entrega' ? 'Entrega' : 'Retirada', nomeStatus(r.status), r.data && dataCurta(r.data)].filter(Boolean).join(' · ')}
-                    </div>
-                    {r.erros.map((e) => <div key={e} className="importar__msg importar__msg--erro">{e}</div>)}
-                    {!r.erros.length && r.repetida && (
-                      <div className="importar__msg">{r.repetida === 'sistema' ? 'Parece já estar no sistema' : 'Repetida nesta planilha'}{pulada ? ' · será pulada' : ''}</div>
+                  <li key={r.linha} className={[r.erros.length && 'importar__item--erro', pulada && 'importar__item--pulada', aberta && 'importar__item--aberta'].filter(Boolean).join(' ') || undefined}>
+                    <button type="button" className="importar__resumo-linha" aria-expanded={aberta}
+                      onClick={() => setEditando(aberta ? null : r.linha)}>
+                      <span className="importar__linha">
+                        <span className="importar__num">{r.linha}</span>
+                        <span className="importar__nome">{r.nome || 'Sem nome'}</span>
+                        <span className="importar__total">{reais(r.total)}</span>
+                        <IconeEditar tamanho={15} className="importar__lapis" />
+                      </span>
+                      <span className="importar__det">
+                        {[r.whatsappOk ? telefone(r.whatsapp) : r.whatsapp, r.itens.map((i) => `${i.quantidade} ${i.nome}`).join(', '),
+                          r.modo === 'entrega' ? 'Entrega' : 'Retirada', nomeStatus(r.status), r.data && dataCurta(r.data)].filter(Boolean).join(' · ')}
+                      </span>
+                      {r.erros.map((e) => <span key={e} className="importar__msg importar__msg--erro">{e}</span>)}
+                      {!r.erros.length && r.repetida && (
+                        <span className="importar__msg">{r.repetida === 'sistema' ? 'Parece já estar no sistema' : 'Repetida nesta planilha'}{pulada ? ' · será pulada' : ''}</span>
+                      )}
+                      {!r.erros.length && r.avisos.map((a) => <span key={a} className="importar__msg">{a}</span>)}
+                    </button>
+                    {aberta && (
+                      <CorrigirLinha reserva={r} produtos={produtos} aoSalvar={(b) => corrigir(r.linha, b)}
+                        aoCancelar={() => setEditando(null)} aoTirar={() => tirar(r.linha)} />
                     )}
-                    {!r.erros.length && r.avisos.map((a) => <div key={a} className="importar__msg">{a}</div>)}
                   </li>
                 )
               })}
@@ -138,8 +160,8 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
 
             {comErro.length > 0 && (
               <p className="erro" role="alert">
-                Corrija {comErro.length === 1 ? 'a linha com erro' : `as ${comErro.length} linhas com erro`} na planilha e escolha o arquivo de novo.
-                Nada é gravado enquanto tiver erro.
+                {comErro.length === 1 ? 'Falta corrigir 1 linha' : `Faltam corrigir ${comErro.length} linhas`}. Toque nela para corrigir aqui
+                ou tire da importação. Nada é gravado enquanto tiver erro.
               </p>
             )}
           </>
@@ -149,10 +171,11 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
 
         <div className="form__botoes">
           <button type="button" className="botao botao--secundario" onClick={aoCancelar} disabled={salvando}>Cancelar</button>
-          {lista.length > 0 && (
+          {lista && (
             <button type="button" className="botao botao--principal" onClick={importar}
-              disabled={salvando || comErro.length > 0 || paraGravar.length === 0}>
+              disabled={salvando || comErro.length > 0 || paraGravar.length === 0 || editando != null}>
               {salvando ? 'Importando...'
+                : comErro.length > 0 ? `${comErro.length} ${comErro.length === 1 ? 'linha' : 'linhas'} com erro`
                 : paraGravar.length === 0 ? 'Nada para importar'
                   : `Importar ${paraGravar.length} ${paraGravar.length === 1 ? 'reserva' : 'reservas'}`}
             </button>
@@ -163,5 +186,84 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
         )}
       </div>
     </div>
+  )
+}
+
+// Formulário para corrigir uma linha da planilha sem sair do painel. Os campos com erro ficam em vermelho.
+function CorrigirLinha({ reserva: r, produtos, aoSalvar, aoCancelar, aoTirar }) {
+  const [b, setB] = useState(() => ({ ...r.bruto, qtd: { ...r.bruto.qtd }, preco: { ...r.bruto.preco } }))
+  const primeiro = useRef(null)
+  const errado = (campo) => r.camposErrados.has(campo) || (campo.startsWith('qtd') && r.camposErrados.has('qtd'))
+  const classe = (campo) => `campo campo--pequeno${errado(campo) ? ' campo--erro' : ''}`
+  const mudar = (campo) => (e) => setB((x) => ({ ...x, [campo]: e.target.value }))
+  const mudarDe = (grupo, id) => (e) => setB((x) => ({ ...x, [grupo]: { ...x[grupo], [id]: e.target.value } }))
+
+  useEffect(() => {
+    const el = primeiro.current?.closest('li')
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    primeiro.current?.querySelector('.campo--erro')?.focus({ preventScroll: true })
+  }, [])
+
+  // Valor que não está na lista (ex.: "Correios") aparece como opção marcada como inválida, até ser trocado.
+  const modoValido = ['', 'entrega', 'retirada'].includes(semAcento(b.modo ?? '').trim()) || /^(entreg|retir)/.test(semAcento(b.modo ?? ''))
+  const statusValido = !b.status || STATUS.some((s) => [semAcento(s.nome), semAcento(s.plural)].includes(semAcento(b.status).trim()))
+  const valorModo = /^entreg/.test(semAcento(b.modo ?? '')) ? 'Entrega' : /^(retir|sitio|busca)/.test(semAcento(b.modo ?? '')) ? 'Retirada' : b.modo
+  const valorStatus = STATUS.find((s) => [semAcento(s.nome), semAcento(s.plural), s.id].includes(semAcento(b.status ?? '').trim()))?.nome ?? b.status
+
+  return (
+    <form className="corrigir" ref={primeiro} onSubmit={(e) => { e.preventDefault(); aoSalvar(b) }} noValidate>
+      <div className="corrigir__grade">
+        <label className="campo-rotulo corrigir__largo">Nome
+          <input className={classe('nome')} value={b.nome} onChange={mudar('nome')} maxLength={100} />
+        </label>
+        <label className="campo-rotulo">WhatsApp
+          <input className={classe('whatsapp')} value={b.whatsapp} onChange={mudar('whatsapp')} inputMode="tel" placeholder="(34) 99999-8888" />
+        </label>
+        <label className="campo-rotulo">Data
+          <input className={classe('data')} value={b.data} onChange={mudar('data')} placeholder="20/10/2026" inputMode="numeric" />
+        </label>
+        <label className="campo-rotulo">Recebimento
+          <select className={classe('modo')} value={valorModo || ''} onChange={mudar('modo')}>
+            <option value="">Automático</option>
+            <option value="Entrega">Entrega</option>
+            <option value="Retirada">Retirada</option>
+            {!modoValido && <option value={b.modo}>{b.modo} (inválido)</option>}
+          </select>
+        </label>
+        <label className="campo-rotulo">Status
+          <select className={classe('status')} value={valorStatus || ''} onChange={mudar('status')}>
+            <option value="">Nova</option>
+            {STATUS.filter((s) => s.id !== 'nova').map((s) => <option key={s.id} value={s.nome}>{s.nome}</option>)}
+            {!statusValido && <option value={b.status}>{b.status} (inválido)</option>}
+          </select>
+        </label>
+        <label className="campo-rotulo corrigir__largo">Endereço
+          <input className={classe('endereco')} value={b.endereco} onChange={mudar('endereco')} maxLength={300} placeholder="Só para entrega" />
+        </label>
+      </div>
+
+      <div className="corrigir__itens">
+        <span className="corrigir__titulo">Quantidade e preço por unidade</span>
+        {produtos.filter((p) => p.ativo || b.qtd[p.id]).map((p) => (
+          <div key={p.id} className="corrigir__item">
+            <span>{p.nome}</span>
+            <input className={classe(`qtd-${p.id}`)} value={b.qtd[p.id] ?? ''} onChange={mudarDe('qtd', p.id)} inputMode="numeric"
+              placeholder="0" aria-label={`Quantidade de ${p.nome}`} />
+            <input className={classe(`preco-${p.id}`)} value={b.preco[p.id] ?? ''} onChange={mudarDe('preco', p.id)} inputMode="decimal"
+              placeholder={reais(p.preco_unidade).replace('R$ ', '')} aria-label={`Preço de ${p.nome}`} />
+          </div>
+        ))}
+      </div>
+
+      <label className="campo-rotulo">Anotações
+        <input className="campo campo--pequeno" value={b.observacao} onChange={mudar('observacao')} maxLength={1000} />
+      </label>
+
+      <div className="corrigir__botoes">
+        <button type="button" className="link corrigir__tirar" onClick={aoTirar}>Tirar da importação</button>
+        <button type="button" className="botao botao--secundario botao--pequeno" onClick={aoCancelar}>Cancelar</button>
+        <button type="submit" className="botao botao--principal botao--pequeno">Salvar</button>
+      </div>
+    </form>
   )
 }

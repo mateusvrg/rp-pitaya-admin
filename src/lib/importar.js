@@ -73,6 +73,83 @@ function mapearColunas(cabecalho, produtos) {
   return mapa
 }
 
+// Confere uma linha. b = os textos da linha como estão na planilha (ou como foram corrigidos no painel):
+// { linha, data, nome, whatsapp, modo, endereco, status, observacao, qtd: { idProduto: texto }, preco: { idProduto: texto } }
+export function validarLinha(b, produtos) {
+  const erros = [], avisos = [], camposErrados = new Set()
+  const erro = (campo, texto) => { erros.push(texto); camposErrados.add(campo) }
+  const t = (v) => String(v ?? '').trim()
+
+  const nome = t(b.nome).replace(/\s+/g, ' ')
+  if (nome.length < 3) erro('nome', 'falta o nome')
+  else if (nome.length > 100) erro('nome', 'nome muito longo')
+
+  const w = normalizarWhatsApp(t(b.whatsapp))
+  if (!t(b.whatsapp)) erro('whatsapp', 'falta o WhatsApp')
+  else if (!w.ok) erro('whatsapp', `WhatsApp "${t(b.whatsapp)}" inválido`)
+  avisos.push(...w.avisos)
+
+  const endereco = t(b.endereco)
+  const modoTexto = chave(b.modo)
+  let modo = modoTexto.startsWith('entreg') ? 'entrega' : /^(retir|sitio|busca)/.test(modoTexto) ? 'retirada' : null
+  if (!modo) {
+    if (modoTexto) erro('modo', `recebimento "${t(b.modo)}" não entendido (use Entrega ou Retirada)`)
+    modo = endereco ? 'entrega' : 'retirada'
+  }
+
+  const statusTexto = chave(b.status)
+  const status = statusTexto ? STATUS_POR_NOME[statusTexto] : 'nova'
+  if (!status) erro('status', `status "${t(b.status)}" não existe`)
+
+  const d = lerData(t(b.data))
+  if (d.erro) erro('data', d.erro)
+  const data = d.data ?? new Date()
+  if (d.data && d.data > new Date(Date.now() + 86400000)) erro('data', 'data no futuro')
+
+  const itens = []
+  produtos.forEach((p) => {
+    const q = lerNumero(t(b.qtd?.[p.id]))
+    if (q == null || q === 0) return
+    if (!Number.isInteger(q) || q < 0 || q > 500) { erro(`qtd-${p.id}`, `quantidade de ${p.nome} inválida`); return }
+    let preco = p.preco_unidade
+    const pc = lerNumero(t(b.preco?.[p.id]))
+    if (pc != null) {
+      if (Number.isNaN(pc) || pc < 0) erro(`preco-${p.id}`, `preço de ${p.nome} inválido`)
+      else preco = pc
+    }
+    if (!p.disponivel) avisos.push(`${p.nome} está esgotada no site`)
+    itens.push({ produto_id: p.id, nome: p.nome, quantidade: q, preco })
+  })
+  if (itens.length === 0 && !erros.some((e) => e.startsWith('quantidade'))) erro('qtd', 'nenhuma quantidade preenchida')
+
+  return {
+    linha: b.linha, nome, whatsapp: w.numero, whatsappOk: w.ok, modo, endereco: modo === 'entrega' ? endereco : '', status: status ?? 'nova',
+    data: d.data ? data : null, dataUsada: data, observacao: t(b.observacao), itens,
+    total: itens.reduce((s, i) => s + i.quantidade * i.preco, 0), erros, avisos, camposErrados, bruto: b,
+  }
+}
+
+// Reservas que já estão no sistema (ou repetidas na própria planilha): mesmo WhatsApp, mesmo dia e mesmos itens.
+export function marcarRepetidas(lista, existentes = []) {
+  const dia = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+  const assinatura = (whats, data, itens) => `${whats}|${dia(data)}|${itens.map((i) => `${i.produto_id}:${i.quantidade}`).sort().join(',')}`
+  const jaExiste = new Set(existentes.map((r) => assinatura(r.whatsapp, new Date(r.criado_em), r.itens.map((i) => ({ produto_id: i.produtoId, quantidade: i.quantidade })))))
+  const vistas = new Set()
+  return lista.map((r) => {
+    const assin = r.whatsappOk && r.itens.length ? assinatura(r.whatsapp, r.dataUsada, r.itens) : null
+    const repetida = assin ? (jaExiste.has(assin) ? 'sistema' : vistas.has(assin) ? 'planilha' : null) : null
+    if (assin) vistas.add(assin)
+    return { ...r, repetida }
+  })
+}
+
+// Data como o Julio leria (20/10/2026 ou 20/10/2026 14:30), para mostrar no formulário de correção.
+const dataTexto = (d) => {
+  const p = (n) => String(n).padStart(2, '0')
+  const hora = d.getHours() === 12 && d.getMinutes() === 0 ? '' : ` ${p(d.getHours())}:${p(d.getMinutes())}`
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}${hora}`
+}
+
 // Lê todas as linhas. Devolve { reservas, problemas } — problemas só existem se o cabeçalho estiver errado.
 export function interpretar(linhas, produtos, existentes = []) {
   const iCab = linhas.findIndex((l) => l.some((c) => String(c).trim()))
@@ -82,75 +159,24 @@ export function interpretar(linhas, produtos, existentes = []) {
   if (Object.keys(mapa.produtos).length === 0) faltando.push('uma coluna com o nome de cada variedade (ex.: Teruya do Vale)')
   if (faltando.length) return { problemas: [`Não encontrei a coluna ${faltando.join(', ')}. Use o modelo do painel.`], reservas: [] }
 
-  // Reservas que já estão no sistema: mesmo WhatsApp, mesmo dia e mesmos itens = provavelmente repetida.
-  const dia = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
-  const assinatura = (whats, data, itens) => `${whats}|${dia(data)}|${itens.map((i) => `${i.produto_id}:${i.quantidade}`).sort().join(',')}`
-  const jaExiste = new Set(existentes.map((r) => assinatura(r.whatsapp, new Date(r.criado_em), r.itens.map((i) => ({ produto_id: i.produtoId, quantidade: i.quantidade })))))
-  const vistas = new Set()
-
   const pega = (l, col) => (col == null ? '' : String(l[col] ?? '').trim())
   const reservas = []
   linhas.slice(iCab + 1).forEach((l, j) => {
     if (!l.some((c) => String(c ?? '').trim())) return // linha em branco
-    const linha = iCab + j + 2
-    const erros = [], avisos = []
-
-    const nome = pega(l, mapa.nome).replace(/\s+/g, ' ')
-    if (nome.length < 3) erros.push('falta o nome')
-    else if (nome.length > 100) erros.push('nome muito longo')
-
-    const w = normalizarWhatsApp(pega(l, mapa.whatsapp))
-    if (!pega(l, mapa.whatsapp)) erros.push('falta o WhatsApp')
-    else if (!w.ok) erros.push(`WhatsApp "${pega(l, mapa.whatsapp)}" inválido`)
-    avisos.push(...w.avisos)
-
-    const endereco = pega(l, mapa.endereco)
-    const modoTexto = chave(pega(l, mapa.modo))
-    let modo = modoTexto.startsWith('entreg') ? 'entrega' : /^(retir|sitio|busca)/.test(modoTexto) ? 'retirada' : null
-    if (!modo) {
-      if (modoTexto) erros.push(`recebimento "${pega(l, mapa.modo)}" não entendido (use Entrega ou Retirada)`)
-      modo = endereco ? 'entrega' : 'retirada'
+    const textoData = pega(l, mapa.data)
+    const lida = lerData(textoData)
+    const b = {
+      linha: iCab + j + 2,
+      data: lida.data ? dataTexto(lida.data) : textoData,
+      nome: pega(l, mapa.nome), whatsapp: pega(l, mapa.whatsapp).replace(/\.0+$/, ''), modo: pega(l, mapa.modo),
+      endereco: pega(l, mapa.endereco), status: pega(l, mapa.status), observacao: pega(l, mapa.observacao),
+      qtd: Object.fromEntries(Object.entries(mapa.produtos).map(([id, col]) => [id, pega(l, col)])),
+      preco: Object.fromEntries(Object.entries(mapa.precos).map(([id, col]) => [id, pega(l, col)])),
     }
-
-    const statusTexto = chave(pega(l, mapa.status))
-    const status = statusTexto ? STATUS_POR_NOME[statusTexto] : 'nova'
-    if (!status) erros.push(`status "${pega(l, mapa.status)}" não existe`)
-
-    const d = lerData(pega(l, mapa.data))
-    if (d.erro) erros.push(d.erro)
-    const data = d.data ?? new Date()
-    if (d.data && d.data > new Date(Date.now() + 86400000)) erros.push('data no futuro')
-
-    const itens = []
-    produtos.forEach((p) => {
-      const col = mapa.produtos[p.id]
-      if (col == null) return
-      const q = lerNumero(pega(l, col))
-      if (q == null || q === 0) return
-      if (!Number.isInteger(q) || q < 0 || q > 500) { erros.push(`quantidade de ${p.nome} inválida`); return }
-      let preco = p.preco_unidade
-      const pc = mapa.precos[p.id] != null ? lerNumero(pega(l, mapa.precos[p.id])) : null
-      if (pc != null) {
-        if (Number.isNaN(pc) || pc < 0) erros.push(`preço de ${p.nome} inválido`)
-        else preco = pc
-      }
-      if (!p.disponivel) avisos.push(`${p.nome} está esgotada no site`)
-      itens.push({ produto_id: p.id, nome: p.nome, quantidade: q, preco })
-    })
-    if (itens.length === 0) erros.push('nenhuma quantidade preenchida')
-
-    const assin = w.ok && itens.length ? assinatura(w.numero, data, itens) : null
-    const repetida = assin ? (jaExiste.has(assin) ? 'sistema' : vistas.has(assin) ? 'planilha' : null) : null
-    if (assin) vistas.add(assin)
-
-    reservas.push({
-      linha, nome, whatsapp: w.numero, modo, endereco: modo === 'entrega' ? endereco : '', status: status ?? 'nova',
-      data: d.data ? data : null, observacao: pega(l, mapa.observacao), itens,
-      total: itens.reduce((s, i) => s + i.quantidade * i.preco, 0), erros, avisos, repetida,
-    })
+    reservas.push(validarLinha(b, produtos))
   })
   if (reservas.length === 0) return { problemas: ['Não há nenhuma reserva preenchida abaixo do cabeçalho.'], reservas: [] }
-  return { problemas: [], reservas }
+  return { problemas: [], reservas: marcarRepetidas(reservas, existentes) }
 }
 
 // Formato que a função lancar_reservas do banco espera.
