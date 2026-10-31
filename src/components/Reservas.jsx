@@ -11,7 +11,7 @@ import { Calendario } from './Calendario'
 import { FiltroCelular } from './FiltroCelular'
 import { useBarraFixa } from './useBarraFixa'
 import { MaisItens, usePaginacao } from './MaisItens'
-import { IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas, IconeMais, IconeWhatsApp, IconeInstagram } from './Icones'
+import { IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas, IconeMais, IconeWhatsApp, IconeInstagram, IconeSite } from './Icones'
 
 // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
 const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...(d.getFullYear() !== new Date().getFullYear() && { year: '2-digit' }) })
@@ -237,7 +237,8 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
                   </span>
                   <span className="linha__data">
                     {dataHora(r.criado_em)}
-                    {canalDe(r) === 'whatsapp' && <span className="origem-tag"><IconeWhatsApp tamanho={13} />WhatsApp</span>}
+                    {canalDe(r) === 'site' && <span className="origem-tag"><IconeSite tamanho={13} />Site</span>}
+                    {canalDe(r) === 'whatsapp' && <span className="origem-tag origem-tag--whatsapp"><IconeWhatsApp tamanho={13} />WhatsApp</span>}
                     {canalDe(r) === 'instagram' && <span className="origem-tag origem-tag--instagram"><IconeInstagram tamanho={13} />Instagram</span>}
                   </span>
                 </a>
