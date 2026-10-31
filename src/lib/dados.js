@@ -29,7 +29,7 @@ const normalizarReserva = (r) => ({
 
 export async function listarReservas() {
   const linhas = await rest(
-    'reservas?select=id,nome,whatsapp,modo,endereco,status,total_estimado,observacao,criado_em,atualizado_em,' +
+    'reservas?select=id,nome,whatsapp,modo,endereco,status,total_estimado,observacao,origem,criado_em,atualizado_em,' +
       'itens_reserva(produto_id,quantidade,preco_unitario,produtos(nome))&order=criado_em.desc&limit=2000',
   )
   return linhas.map(normalizarReserva)
@@ -79,3 +79,14 @@ export const atualizarVarias = (ids, campos) =>
 export const alternarVarios = (ids, campos) =>
   rest(`produtos?id=in.(${ids.join(',')})`, { metodo: 'PATCH', corpo: campos, retornar: true })
     .then((l) => l.map((p) => ({ ...p, preco_unidade: Number(p.preco_unidade) })))
+
+// Origem da reserva: feita no site ou lançada pelo painel (à mão ou por planilha).
+export const ORIGENS = [
+  { id: 'site', nome: 'Site' },
+  { id: 'whatsapp', nome: 'WhatsApp', inclui: ['manual', 'importada'] },
+]
+export const pelaOrigem = (r, filtro) => !filtro || (filtro === 'site' ? (r.origem ?? 'site') === 'site' : ['manual', 'importada'].includes(r.origem))
+
+// Lança uma reserva (botão "Nova reserva") ou várias (planilha) de uma vez: ou entram todas ou nenhuma.
+export const lancarReservas = (reservas, origem) =>
+  rest('rpc/lancar_reservas', { metodo: 'POST', corpo: { p_reservas: reservas, p_origem: origem } })

@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { STATUS, nomeStatus } from '../lib/dados'
+import { ORIGENS, STATUS, nomeStatus, pelaOrigem } from '../lib/dados'
 import { baixarCsv } from '../lib/csv'
 import { dataHora, reais, resumoItens, semAcento } from '../lib/formato'
 import { DetalheReserva } from './DetalheReserva'
+import { NovaReserva } from './NovaReserva'
+import { ImportarReservas } from './ImportarReservas'
 import { AcoesEmMassa } from './AcoesEmMassa'
 import { Calendario } from './Calendario'
 import { FiltroCelular } from './FiltroCelular'
 import { useBarraFixa } from './useBarraFixa'
 import { MaisItens, usePaginacao } from './MaisItens'
-import { IconeBaixar, IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas } from './Icones'
+import { IconeBaixar, IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas, IconeMais, IconeEnviar, IconeWhatsAppPequeno } from './Icones'
 
 // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
 const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...(d.getFullYear() !== new Date().getFullYear() && { year: '2-digit' }) })
@@ -17,7 +19,7 @@ export function Selo({ status }) {
   return <span className={`selo selo--${status}`}><span className="selo__ponto" aria-hidden="true" />{nomeStatus(status)}</span>
 }
 
-export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, aoAtualizar }) {
+export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSelecionar, aoAtualizar, aoRecarregar }) {
   const [filtro, setFiltro] = useState(filtroInicial ?? 'ativas')
   const [busca, setBusca] = useState('')
   const barra = useBarraFixa()
@@ -26,9 +28,16 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   const [acoesAbertas, setAcoesAbertas] = useState(false) // celular: painel de ações em tela cheia
   const [periodo, setPeriodo] = useState(null) // { de, ate } escolhido no calendário, ou null = qualquer data
   const [calendarioAberto, setCalendarioAberto] = useState(false)
+  const [origem, setOrigem] = useState(null) // null = todas, 'site' ou 'whatsapp'
+  const [lancando, setLancando] = useState(null) // null | 'nova' | 'importar' (painel da direita)
+
+  // Abrir uma reserva da lista fecha o formulário de nova reserva / importação.
+  useEffect(() => { if (selecionada) setLancando(null) }, [selecionada])
+  const abrirLancamento = (qual) => { setMarcadas(new Set()); aoSelecionar(null); setLancando(qual) }
+  const lancou = (texto) => { setLancando(null); setRecado(texto); aoRecarregar() }
 
   // Trocar de filtro ou buscar limpa a seleção, para não agir em reservas que não estão na tela.
-  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca, periodo])
+  useEffect(() => { setMarcadas(new Set()); ultima.current = null }, [filtro, busca, periodo, origem])
   useEffect(() => { if (marcadas.size === 0) setAcoesAbertas(false) }, [marcadas])
 
   useEffect(() => {
@@ -38,12 +47,15 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   }, [recado])
 
   // Reservas feitas dentro do período escolhido (do primeiro dia 00:00 até o fim do último dia).
-  const doPeriodo = useMemo(() => {
+  const noPeriodo = useMemo(() => {
     if (!periodo) return reservas
     const inicio = new Date(periodo.de); inicio.setHours(0, 0, 0, 0)
     const fim = new Date(periodo.ate); fim.setHours(23, 59, 59, 999)
     return reservas.filter((r) => { const d = new Date(r.criado_em); return d >= inicio && d <= fim })
   }, [reservas, periodo])
+  // Origem: feitas no site ou lançadas pelo painel (WhatsApp).
+  const origens = ORIGENS.map((o) => ({ ...o, qtd: noPeriodo.filter((r) => pelaOrigem(r, o.id)).length }))
+  const doPeriodo = useMemo(() => noPeriodo.filter((r) => pelaOrigem(r, origem)), [noPeriodo, origem])
 
   const contagem = useMemo(() => {
     const c = Object.fromEntries(STATUS.map((s) => [s.id, 0]))
@@ -68,7 +80,7 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
     })
   }, [doPeriodo, filtro, busca])
   // Lista mostra 10 por vez; trocar de filtro ou buscar volta para 10.
-  const pag = usePaginacao(visiveis.length, [filtro, busca, periodo])
+  const pag = usePaginacao(visiveis.length, [filtro, busca, periodo, origem])
 
   const atual = reservas.find((r) => r.id === selecionada) ?? null
   const selecionando = marcadas.size > 0
@@ -117,7 +129,7 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
   }
 
   return (
-    <div className={`reservas${(selecionando ? acoesAbertas : atual) ? ' reservas--com-detalhe' : ''}${selecionando ? ' reservas--selecionando' : ''}`}>
+    <div className={`reservas${(selecionando ? acoesAbertas : (atual || lancando)) ? ' reservas--com-detalhe' : ''}${selecionando ? ' reservas--selecionando' : ''}`}>
       <div className="reservas__lista">
         {/* Busca e filtros ficam presos no topo ao rolar a lista (no celular, só a busca + setinha) */}
         <div ref={barra.sentinela} className="barra-filtros__marca" aria-hidden="true" />
@@ -133,17 +145,40 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
             aria-label={barra.aberta ? 'Esconder filtros' : 'Mostrar filtros'} title="Filtros">
             <IconeSetaBaixo tamanho={18} />
           </button>
-          <button type="button" className="botao botao--secundario so-computador" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}>
-            <IconeBaixar tamanho={18} /> <span>Planilha</span>
-          </button>
+          <div className="ferramentas__botoes">
+            <button type="button" className="botao botao--secundario so-computador" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}>
+              <IconeBaixar tamanho={18} /> <span>Planilha</span>
+            </button>
+            <button type="button" className="botao botao--secundario so-computador" onClick={() => abrirLancamento('importar')} aria-pressed={lancando === 'importar'}>
+              <IconeEnviar tamanho={18} /> <span>Importar</span>
+            </button>
+            <button type="button" className="botao-icone botao-icone--alto so-celular" onClick={() => abrirLancamento('importar')}
+              aria-label="Importar planilha" title="Importar planilha">
+              <IconeEnviar tamanho={18} />
+            </button>
+            <button type="button" className="botao botao--principal botao--nova" aria-label="Nova reserva" onClick={() => abrirLancamento('nova')}>
+              <IconeMais tamanho={18} /> <span className="so-computador">Nova reserva</span>
+            </button>
+          </div>
         </div>
 
         <div className="filtros-linha">
-          <FiltroCelular titulo="Filtrar reservas" opcoes={filtros} valor={filtro} aoEscolher={setFiltro} />
+          <FiltroCelular titulo="Filtrar reservas" opcoes={filtros} valor={filtro} aoEscolher={setFiltro}
+            extras={{ titulo: 'Origem', opcoes: origens, valor: origem, aoEscolher: (id) => setOrigem((o) => (o === id ? null : id)) }} />
           <div className="segmentos segmentos--filtros" role="group" aria-label="Filtrar por status">
             {filtros.map((f) => (
               <button key={f.id} type="button" className="segmento" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>
                 {f.nome}<span className="segmento__qtd">{f.qtd}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="segmentos segmentos--filtros" role="group" aria-label="Filtrar por origem">
+            {origens.map((o) => (
+              <button key={o.id} type="button" className="segmento" aria-pressed={origem === o.id}
+                title={o.id === 'site' ? 'Só reservas feitas no site' : 'Só reservas lançadas pelo painel (WhatsApp)'}
+                onClick={() => setOrigem((x) => (x === o.id ? null : o.id))}>
+                {o.nome}<span className="segmento__qtd">{o.qtd}</span>
               </button>
             ))}
           </div>
@@ -177,8 +212,8 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
         {visiveis.length === 0 ? (
           <div className="vazio">
             <p>{busca ? `Nenhuma reserva encontrada para "${busca}".` : periodo ? 'Nenhuma reserva neste filtro e período.' : 'Nenhuma reserva neste filtro.'}</p>
-            {(busca || filtro !== 'todas' || periodo) && (
-              <button type="button" className="link" onClick={() => { setBusca(''); setFiltro('todas'); setPeriodo(null) }}>Ver todas</button>
+            {(busca || filtro !== 'todas' || periodo || origem) && (
+              <button type="button" className="link" onClick={() => { setBusca(''); setFiltro('todas'); setPeriodo(null); setOrigem(null) }}>Ver todas</button>
             )}
           </div>
         ) : (
@@ -210,7 +245,10 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
                     <span className="linha__total">{reais(r.total_estimado)}</span>
                     <Selo status={r.status} />
                   </span>
-                  <span className="linha__data">{dataHora(r.criado_em)}</span>
+                  <span className="linha__data">
+                    {dataHora(r.criado_em)}
+                    {r.origem && r.origem !== 'site' && <span className="origem-tag" title={r.origem === 'importada' ? 'Importada de planilha' : 'Lançada pelo painel'}><IconeWhatsAppPequeno />WhatsApp</span>}
+                  </span>
                 </a>
               </li>
             ))}
@@ -224,6 +262,12 @@ export function Reservas({ reservas, filtroInicial, selecionada, aoSelecionar, a
         {selecionando ? (
           <AcoesEmMassa reservas={listaMarcadas} aoDesmarcar={alternar} aoLimpar={limpar}
             aoVoltar={() => setAcoesAbertas(false)} aoAtualizar={atualizarEmMassa} />
+        ) : lancando === 'nova' ? (
+          <NovaReserva produtos={produtos} aoCancelar={() => setLancando(null)}
+            aoLancar={(nome) => lancou(`Reserva de ${nome} lançada.`)} />
+        ) : lancando === 'importar' ? (
+          <ImportarReservas produtos={produtos} reservas={reservas} aoCancelar={() => setLancando(null)}
+            aoImportar={(n) => lancou(`${n} ${n === 1 ? 'reserva importada' : 'reservas importadas'}.`)} />
         ) : atual
           ? <DetalheReserva key={atual.id} reserva={atual} aoFechar={() => aoSelecionar(null)} aoAtualizar={atualizar(atual)} />
           : (

@@ -10,7 +10,7 @@ export function baixarCsv(reservas) {
     return `"${t.replace(/"/g, '""')}"`
   }
   const numero = (v) => Number(v || 0).toFixed(2).replace('.', ',')
-  const cabecalho = ['Data', 'Nome', 'WhatsApp', 'Recebimento', 'Endereço', 'Itens', 'Unidades', 'Total estimado', 'Status', 'Anotações']
+  const cabecalho = ['Data', 'Nome', 'WhatsApp', 'Recebimento', 'Endereço', 'Itens', 'Unidades', 'Total estimado', 'Status', 'Origem', 'Anotações']
   const linhas = reservas.map((r) => [
     new Date(r.criado_em).toLocaleString('pt-BR'),
     r.nome,
@@ -21,6 +21,7 @@ export function baixarCsv(reservas) {
     unidades(r),
     numero(r.total_estimado),
     nomeStatus(r.status),
+    r.origem === 'importada' ? 'WhatsApp (planilha)' : r.origem === 'manual' ? 'WhatsApp (painel)' : 'Site',
     r.observacao,
   ].map(campo).join(';'))
 

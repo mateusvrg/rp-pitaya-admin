@@ -5,7 +5,8 @@ import { IconeFiltro, IconeSetaBaixo } from './Icones'
 // flutuando no lado esquerdo da tela, logo abaixo do botão (com o fundo levemente escurecido). Tocar fora fecha.
 // No computador este botão fica escondido e aparecem os segmentos normais.
 // variante="seta": só um botão com setinha (fica ao lado da busca, que continua fixa ao rolar a tela).
-export function FiltroCelular({ titulo = 'Filtrar', opcoes, valor, aoEscolher, variante }) {
+// extras (opcional): um segundo grupo de opções que liga/desliga, ex.: origem { titulo, opcoes, valor, aoEscolher }.
+export function FiltroCelular({ titulo = 'Filtrar', opcoes, valor, aoEscolher, variante, extras }) {
   const [topo, setTopo] = useState(null) // posição (px) onde começa a pilha de botões; null = fechado
   const ref = useRef(null)
   const botao = useRef(null)
@@ -20,7 +21,7 @@ export function FiltroCelular({ titulo = 'Filtrar', opcoes, valor, aoEscolher, v
 
   // Abre logo abaixo do botão; se não couber até a barra de baixo, sobe o necessário.
   const abrir = () => {
-    const alturaPilha = opcoes.length * 52
+    const alturaPilha = opcoes.length * 52 + (extras ? extras.opcoes.length * 52 + 30 : 0)
     const limite = window.innerHeight - 88 - alturaPilha
     setTopo(Math.max(16, Math.min(botao.current.getBoundingClientRect().bottom + 8, limite)))
   }
@@ -37,8 +38,9 @@ export function FiltroCelular({ titulo = 'Filtrar', opcoes, valor, aoEscolher, v
       ) : (
         <button ref={botao} type="button" className="filtro-celular" aria-haspopup="dialog" aria-expanded={aberto} onClick={abrir}>
           <IconeFiltro tamanho={16} />
-          <span>Filtros</span>
-          {atual && <span className="filtro-celular__atual">{atual.nome}<span className="segmento__qtd">{atual.qtd}</span></span>}
+          {!extras?.valor && <span>Filtros</span>}
+          {atual && <span className="filtro-celular__atual">{atual.nome}{!extras?.valor && <span className="segmento__qtd">{atual.qtd}</span>}</span>}
+          {extras?.valor && <span className="filtro-celular__extra">{extras.opcoes.find((o) => o.id === extras.valor)?.nome}</span>}
         </button>
       )}
 
@@ -51,6 +53,17 @@ export function FiltroCelular({ titulo = 'Filtrar', opcoes, valor, aoEscolher, v
               <span>{o.nome}</span><span className="segmento__qtd">{o.qtd}</span>
             </button>
           ))}
+          {aberto && extras && (
+            <>
+              <span className="filtros-flutuantes__titulo" style={{ animationDelay: `${opcoes.length * 25}ms` }}>{extras.titulo}</span>
+              {extras.opcoes.map((o, i) => (
+                <button key={o.id} type="button" className="filtros-flutuantes__opcao" aria-pressed={o.id === extras.valor}
+                  style={{ animationDelay: `${(opcoes.length + i + 1) * 25}ms` }} onClick={() => { extras.aoEscolher(o.id); fechar() }}>
+                  <span>{o.nome}</span><span className="segmento__qtd">{o.qtd}</span>
+                </button>
+              ))}
+            </>
+          )}
         </div>
       </dialog>
     </>

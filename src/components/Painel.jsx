@@ -149,8 +149,8 @@ export function Painel() {
             <div className={`conteudo-aba ${deslizar.classe}`} style={deslizar.estilo}>
             {rota.aba === 'dashboard' && <Dashboard reservas={reservas} produtos={produtos} irPara={irPara} />}
             {rota.aba === 'reservas' && (
-              <Reservas key={filtroInicial ?? 'padrao'} reservas={reservas} filtroInicial={filtroInicial}
-                selecionada={rota.id} aoSelecionar={abrirReserva} aoAtualizar={trocarReserva} />
+              <Reservas key={filtroInicial ?? 'padrao'} reservas={reservas} produtos={produtos} filtroInicial={filtroInicial}
+                selecionada={rota.id} aoSelecionar={abrirReserva} aoAtualizar={trocarReserva} aoRecarregar={carregar} />
             )}
             {rota.aba === 'variedades' && <Variedades produtos={produtos} reservas={reservas} aoSalvar={trocarProduto} />}
             </div>

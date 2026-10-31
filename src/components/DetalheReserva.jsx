@@ -39,7 +39,7 @@ export function DetalheReserva({ reserva: r, aoFechar, aoAtualizar }) {
         <button type="button" className="botao-fantasma detalhe__voltar" onClick={aoFechar} aria-label="Voltar para a lista"><IconeVoltar /></button>
         <div className="detalhe__titulo">
           <h2 ref={titulo} tabIndex={-1}>{r.nome}</h2>
-          <p>Reservou em {dataHora(r.criado_em)}</p>
+          <p>Reservou em {dataHora(r.criado_em)}{r.origem === 'manual' ? ' · lançada pelo painel' : r.origem === 'importada' ? ' · importada de planilha' : ''}</p>
         </div>
         <button type="button" className="botao-fantasma detalhe__fechar" onClick={aoFechar} aria-label="Fechar detalhe"><IconeFechar /></button>
       </div>
@@ -77,7 +77,7 @@ export function DetalheReserva({ reserva: r, aoFechar, aoAtualizar }) {
           <h3>Contato e recebimento</h3>
           <p className="info"><IconeTelefone tamanho={18} /> {telefone(r.whatsapp)}</p>
           <p className="info"><IconeLocal tamanho={18} />
-            {r.modo === 'entrega' ? <span>Entrega em: {r.endereco}</span> : <span>Retirada no sítio</span>}
+            {r.modo === 'entrega' ? <span>{r.endereco ? `Entrega em: ${r.endereco}` : 'Entrega (endereço a combinar)'}</span> : <span>Retirada no sítio</span>}
           </p>
           <a className="botao botao--whatsapp" href={linkWhatsApp(r)} target="_blank" rel="noopener noreferrer">
             <IconeWhatsApp tamanho={18} /> Chamar no WhatsApp

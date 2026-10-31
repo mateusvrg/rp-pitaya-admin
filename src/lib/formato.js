@@ -22,7 +22,7 @@ export const resumoItens = (r) => r.itens.map((i) => `${i.quantidade} ${i.nome}`
 export function linkWhatsApp(r) {
   const primeiroNome = r.nome.split(' ')[0]
   const recebimento = r.modo === 'entrega'
-    ? `entrega em: ${r.endereco}`
+    ? (r.endereco ? `entrega em: ${r.endereco}` : 'entrega (endereço a combinar)')
     : 'retirada no sítio'
   const texto =
     `Olá, ${primeiroNome}! Aqui é do sítio Raízes Popolim, da RP Pitaya. ` +
