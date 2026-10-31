@@ -129,15 +129,15 @@ export function validarLinha(b, produtos) {
   }
 }
 
-// Reservas que já estão no sistema (ou repetidas na própria planilha): mesmo nome, WhatsApp, dia e itens.
+// Reservas que já estão no sistema (ou repetidas na própria planilha): mesmo nome, WhatsApp, dia, itens e anotação.
 export function marcarRepetidas(lista, existentes = []) {
   const dia = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
   // O nome entra junto: várias pessoas podem ter o mesmo WhatsApp anotado (ex.: um número genérico).
-  const assinatura = (nome, whats, data, itens) => `${chave(nome)}|${whats}|${dia(data)}|${itens.map((i) => `${i.produto_id}:${i.quantidade}`).sort().join(',')}`
-  const jaExiste = new Set(existentes.map((r) => assinatura(r.nome, r.whatsapp, new Date(r.criado_em), r.itens.map((i) => ({ produto_id: i.produtoId, quantidade: i.quantidade })))))
+  const assinatura = (nome, whats, data, itens, obs) => `${chave(nome)}|${chave(obs)}|${whats}|${dia(data)}|${itens.map((i) => `${i.produto_id}:${i.quantidade}`).sort().join(',')}`
+  const jaExiste = new Set(existentes.map((r) => assinatura(r.nome, r.whatsapp, new Date(r.criado_em), r.itens.map((i) => ({ produto_id: i.produtoId, quantidade: i.quantidade })), r.observacao)))
   const vistas = new Set()
   return lista.map((r) => {
-    const assin = r.whatsappOk && r.itens.length ? assinatura(r.nome, r.whatsapp, r.dataUsada, r.itens) : null
+    const assin = r.whatsappOk && r.itens.length ? assinatura(r.nome, r.whatsapp, r.dataUsada, r.itens, r.observacao) : null
     const repetida = assin ? (jaExiste.has(assin) ? 'sistema' : vistas.has(assin) ? 'planilha' : null) : null
     if (assin) vistas.add(assin)
     return { ...r, repetida }
@@ -229,7 +229,7 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     [`Colunas "Preço ...": só se combinou um preço diferente do site (ex.: Preço ${exemplo} = 8,00). Em branco = preço do site.`],
     [''],
     ['Para importar: painel → Reservas → botão de planilha → Importar. O painel mostra tudo antes de gravar.'],
-    ['Reservas que já existem no sistema (mesmo nome, WhatsApp, dia e quantidades) são puladas, então dá para importar a mesma planilha de novo depois de acrescentar linhas.'],
+    ['Reservas que já existem no sistema (mesmo nome, WhatsApp, dia, quantidades e anotação) são puladas, então dá para importar a mesma planilha de novo depois de acrescentar linhas.'],
   ]
   baixarArquivo(gerarXlsx([
     { nome: 'Reservas', colunas, linhas },
