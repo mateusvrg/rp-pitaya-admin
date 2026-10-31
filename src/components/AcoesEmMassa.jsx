@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { STATUS, atualizarVarias, nomeStatus } from '../lib/dados'
-import { baixarCsv } from '../lib/csv'
+import { exportarReservas } from '../lib/importar'
 import { reais, unidades } from '../lib/formato'
 import { IconeBaixar, IconeFechar, IconeVoltar } from './Icones'
 
 // Painel lateral que aparece no lugar do detalhe quando há reservas marcadas na lista.
-export function AcoesEmMassa({ reservas, aoDesmarcar, aoLimpar, aoVoltar, aoAtualizar }) {
+export function AcoesEmMassa({ reservas, produtos, aoDesmarcar, aoLimpar, aoVoltar, aoAtualizar }) {
   const [confirmar, setConfirmar] = useState(null) // status escolhido, esperando confirmação
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState(null)
@@ -101,8 +101,8 @@ export function AcoesEmMassa({ reservas, aoDesmarcar, aoLimpar, aoVoltar, aoAtua
         </div>
 
         <div className="bloco">
-          <button type="button" className="botao botao--secundario" onClick={() => baixarCsv(reservas)}>
-            <IconeBaixar tamanho={18} /> Baixar planilha das selecionadas
+          <button type="button" className="botao botao--secundario" onClick={() => exportarReservas(produtos, reservas)}>
+            <IconeBaixar tamanho={18} /> Exportar planilha das selecionadas
           </button>
           <button type="button" className="link massa-limpar" onClick={aoLimpar}>Limpar seleção</button>
           <p className="massa-dica">Para chamar no WhatsApp, abra cada reserva separadamente.</p>

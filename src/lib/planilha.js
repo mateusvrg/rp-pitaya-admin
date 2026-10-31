@@ -137,11 +137,16 @@ const letra = (n) => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; 
 // colunas: [{ titulo, largura, estilo: 'data'|'texto'|'numero'|'dinheiro', lista: ['Entrega','Retirada'] }]
 // abas: [{ nome, colunas, linhas: [[...]] }]  (a primeira aba recebe as listas de escolha e o cabeçalho fixo)
 export function gerarXlsx(abas) {
-  const estilos = { cabecalho: 1, data: 2, texto: 3, numero: 4, dinheiro: 5, nota: 6 }
+  const estilos = { cabecalho: 1, data: 2, texto: 3, numero: 4, dinheiro: 5, nota: 6, dataHora: 7 }
   const celula = (valor, col, lin, estilo) => {
     const ref = `${letra(col)}${lin}`
     const s = estilo ? ` s="${estilos[estilo]}"` : ''
     if (valor === '' || valor == null) return estilo ? `<c r="${ref}"${s}/>` : ''
+    // Data vira número de data do Excel (dias desde 30/12/1899, no horário local), com dia e hora.
+    if (valor instanceof Date) {
+      const serial = (valor - new Date(1899, 11, 30) - (valor.getTimezoneOffset() - new Date(1899, 11, 30).getTimezoneOffset()) * 60000) / 86400000
+      return `<c r="${ref}" s="${estilos.dataHora}"><v>${serial.toFixed(6)}</v></c>`
+    }
     if (typeof valor === 'number') return `<c r="${ref}"${s}><v>${valor}</v></c>`
     return `<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${esc(valor)}</t></is></c>`
   }
@@ -175,17 +180,18 @@ export function gerarXlsx(abas) {
       abas.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') +
       `<Relationship Id="rId${abas.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
     'xl/styles.xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-      '<numFmts count="2"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="&quot;R$&quot; #,##0.00"/></numFmts>' +
+      '<numFmts count="3"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="&quot;R$&quot; #,##0.00"/><numFmt numFmtId="166" formatCode="dd/mm/yyyy hh:mm"/></numFmts>' +
       '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts>' +
       '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFA8154F"/></patternFill></fill></fills>' +
       '<borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-      '<cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>' +
+      '<cellXfs count="8"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>' +
       '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" applyFont="1" applyFill="1"/>' +
       '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
       '<xf numFmtId="49" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
       '<xf numFmtId="1" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
       '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
-      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs>' +
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf>' +
+      '<xf numFmtId="166" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/></cellXfs>' +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
       '</styleSheet>',
   }

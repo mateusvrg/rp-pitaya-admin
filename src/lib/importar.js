@@ -1,7 +1,7 @@
 // Transforma as linhas da planilha em reservas, conferindo cada uma antes de mandar para o banco.
 import { STATUS } from './dados'
 import { gerarXlsx, baixarArquivo } from './planilha'
-import { semAcento } from './formato'
+import { semAcento, telefone } from './formato'
 
 const chave = (t) => semAcento(String(t ?? '')).replace(/[^a-z0-9]+/g, ' ').trim()
 
@@ -160,11 +160,13 @@ export const paraBanco = (r) => ({
   itens: r.itens.map((i) => ({ produto_id: i.produto_id, quantidade: i.quantidade, preco: i.preco })),
 })
 
-// Planilha modelo: aba "Reservas" (para preencher) + aba "Como preencher".
-export function baixarModelo(produtos) {
-  const vars = produtos.filter((p) => p.ativo)
+// Planilha no formato do modelo: vazia (para preencher) ou com reservas (exportar).
+// Exportada assim, ela pode ser editada e importada de novo (as que já existem são puladas).
+function planilhaReservas(produtos, reservas, nomeArquivo) {
+  const usadas = new Set(reservas.flatMap((r) => r.itens.map((i) => i.produtoId)))
+  const vars = produtos.filter((p) => p.ativo || usadas.has(p.id))
   const colunas = [
-    { titulo: 'Data', largura: 13, estilo: 'data' },
+    { titulo: 'Data', largura: reservas.length ? 17 : 13, estilo: 'data' },
     { titulo: 'Nome', largura: 26 },
     { titulo: 'WhatsApp', largura: 17, estilo: 'texto' },
     { titulo: 'Recebimento', largura: 14, lista: ['Entrega', 'Retirada'] },
@@ -174,14 +176,24 @@ export function baixarModelo(produtos) {
     { titulo: 'Anotações', largura: 34 },
     ...vars.map((p) => ({ titulo: `Preço ${p.nome}`, largura: Math.max(14, p.nome.length + 9), estilo: 'dinheiro' })),
   ]
+  const linhas = [...reservas].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em)).map((r) => {
+    const item = (p) => r.itens.find((i) => i.produtoId === p.id)
+    return [
+      new Date(r.criado_em), r.nome, telefone(r.whatsapp), r.modo === 'entrega' ? 'Entrega' : 'Retirada', r.endereco ?? '',
+      ...vars.map((p) => item(p)?.quantidade ?? ''),
+      STATUS.find((s) => s.id === r.status)?.nome ?? '', r.observacao ?? '',
+      // Preço só aparece quando foi diferente do preço atual do site.
+      ...vars.map((p) => (item(p) && item(p).preco !== p.preco_unidade ? item(p).preco : '')),
+    ]
+  })
   const exemplo = vars[0]?.nome ?? 'Teruya do Vale'
   const ajuda = [
-    ['Como preencher a aba "Reservas"'],
-    [''],
     ['Uma linha para cada reserva. A primeira linha (cabeçalho) não pode ser mudada.'],
+    ['Só Nome, WhatsApp e a quantidade de pelo menos uma variedade são obrigatórios. O resto pode ficar em branco.'],
+    [''],
     ['Data: o dia em que a pessoa reservou (ex.: 20/10/2026). Em branco = data da importação.'],
-    ['Nome: nome do cliente. Obrigatório.'],
-    ['WhatsApp: com DDD, como quiser: (34) 99999-8888 ou 34999998888. Sem DDD, o painel usa 34. Obrigatório.'],
+    ['Nome: nome do cliente.'],
+    ['WhatsApp: com DDD, como quiser: (34) 99999-8888 ou 34999998888. Sem DDD, o painel usa 34.'],
     ['Recebimento: Entrega ou Retirada. Em branco = Entrega se tiver endereço, senão Retirada.'],
     ['Endereço: só para entrega. Pode ficar em branco se ainda não combinou.'],
     [`Colunas das variedades (${vars.map((p) => p.nome).join(', ')}): quantas unidades de cada uma. Deixe em branco o que a pessoa não pegou.`],
@@ -189,11 +201,15 @@ export function baixarModelo(produtos) {
     ['Anotações: qualquer observação (ex.: pagou metade no Pix).'],
     [`Colunas "Preço ...": só se combinou um preço diferente do site (ex.: Preço ${exemplo} = 8,00). Em branco = preço do site.`],
     [''],
-    ['Depois é só salvar e importar no painel: Reservas → Importar. O painel mostra tudo antes de gravar.'],
-    ['Reservas que já existem no sistema (mesmo WhatsApp, mesmo dia e mesmas quantidades) são puladas, então pode importar a mesma planilha de novo depois de acrescentar linhas.'],
+    ['Para importar: painel → Reservas → botão de planilha → Importar. O painel mostra tudo antes de gravar.'],
+    ['Reservas que já existem no sistema (mesmo WhatsApp, mesmo dia e mesmas quantidades) são puladas, então dá para importar a mesma planilha de novo depois de acrescentar linhas.'],
   ]
   baixarArquivo(gerarXlsx([
-    { nome: 'Reservas', colunas, linhas: [] },
-    { nome: 'Como preencher', colunas: [{ titulo: 'RP Pitaya: modelo de reservas do WhatsApp', largura: 120 }], linhas: ajuda.slice(1) },
-  ]), 'modelo-reservas-rp-pitaya.xlsx')
+    { nome: 'Reservas', colunas, linhas },
+    { nome: 'Como preencher', colunas: [{ titulo: 'RP Pitaya: planilha de reservas', largura: 120 }], linhas: ajuda },
+  ]), nomeArquivo)
 }
+
+export const baixarModelo = (produtos) => planilhaReservas(produtos, [], 'modelo-reservas-rp-pitaya.xlsx')
+export const exportarReservas = (produtos, reservas) =>
+  planilhaReservas(produtos, reservas, `reservas-rp-pitaya-${new Date().toISOString().slice(0, 10)}.xlsx`)

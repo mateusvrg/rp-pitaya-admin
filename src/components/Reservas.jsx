@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ORIGENS, STATUS, nomeStatus, pelaOrigem } from '../lib/dados'
-import { baixarCsv } from '../lib/csv'
+import { exportarReservas } from '../lib/importar'
 import { dataHora, reais, resumoItens, semAcento } from '../lib/formato'
 import { DetalheReserva } from './DetalheReserva'
 import { NovaReserva } from './NovaReserva'
+import { MenuPlanilha } from './MenuPlanilha'
 import { ImportarReservas } from './ImportarReservas'
 import { AcoesEmMassa } from './AcoesEmMassa'
 import { Calendario } from './Calendario'
 import { FiltroCelular } from './FiltroCelular'
 import { useBarraFixa } from './useBarraFixa'
 import { MaisItens, usePaginacao } from './MaisItens'
-import { IconeBaixar, IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas, IconeMais, IconeEnviar, IconeWhatsAppPequeno } from './Icones'
+import { IconeBusca, IconeSetaBaixo, IconeCalendario, IconeFechar, IconeReservas, IconeMais, IconeWhatsAppPequeno } from './Icones'
 
 // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
 const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...(d.getFullYear() !== new Date().getFullYear() && { year: '2-digit' }) })
@@ -146,16 +147,8 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
             <IconeSetaBaixo tamanho={18} />
           </button>
           <div className="ferramentas__botoes">
-            <button type="button" className="botao botao--secundario so-computador" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}>
-              <IconeBaixar tamanho={18} /> <span>Planilha</span>
-            </button>
-            <button type="button" className="botao botao--secundario so-computador" onClick={() => abrirLancamento('importar')} aria-pressed={lancando === 'importar'}>
-              <IconeEnviar tamanho={18} /> <span>Importar</span>
-            </button>
-            <button type="button" className="botao-icone botao-icone--alto so-celular" onClick={() => abrirLancamento('importar')}
-              aria-label="Importar planilha" title="Importar planilha">
-              <IconeEnviar tamanho={18} />
-            </button>
+            <MenuPlanilha total={visiveis.length} aoImportar={() => abrirLancamento('importar')}
+              aoExportar={() => exportarReservas(produtos, visiveis)} />
             <button type="button" className="botao botao--principal botao--nova" aria-label="Nova reserva" onClick={() => abrirLancamento('nova')}>
               <IconeMais tamanho={18} /> <span className="so-computador">Nova reserva</span>
             </button>
@@ -201,11 +194,6 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
                 aoAplicar={({ de, ate }) => { setPeriodo({ de, ate }); setCalendarioAberto(false) }} />
             )}
           </div>
-          {/* Celular: a planilha vira só o ícone, na mesma linha dos filtros */}
-          <button type="button" className="botao-icone so-celular" onClick={() => baixarCsv(visiveis)} disabled={visiveis.length === 0}
-            aria-label="Baixar planilha" title="Baixar planilha">
-            <IconeBaixar tamanho={18} />
-          </button>
         </div>
         </div>
 
@@ -260,7 +248,7 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
 
       <section className="reservas__detalhe" aria-label="Detalhe da reserva">
         {selecionando ? (
-          <AcoesEmMassa reservas={listaMarcadas} aoDesmarcar={alternar} aoLimpar={limpar}
+          <AcoesEmMassa reservas={listaMarcadas} produtos={produtos} aoDesmarcar={alternar} aoLimpar={limpar}
             aoVoltar={() => setAcoesAbertas(false)} aoAtualizar={atualizarEmMassa} />
         ) : lancando === 'nova' ? (
           <NovaReserva produtos={produtos} aoCancelar={() => setLancando(null)}

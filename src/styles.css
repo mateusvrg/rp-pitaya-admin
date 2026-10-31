@@ -890,3 +890,25 @@ fieldset.bloco { border: 0; padding: 0; margin: 0; min-width: 0; }
   .filtro-celular:has(.filtro-celular__extra) .filtro-celular__atual { flex: none; padding-left: 0; border-left: 0; }
   .filtro-celular__extra { min-width: 0; overflow: hidden; text-overflow: ellipsis; padding-left: 6px; }
 }
+
+/* Botão único da planilha (importar / exportar) */
+.menu-planilha { position: relative; flex: none; }
+.menu-planilha .botao-icone[aria-expanded="true"] { background: var(--superficie-2); border-color: var(--texto-2); }
+.menu-planilha__opcoes {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 35; width: max-content; max-width: min(300px, calc(100vw - 32px));
+  display: flex; flex-direction: column; padding: 6px; border-radius: 12px;
+  background: var(--superficie); border: 1px solid var(--borda-forte); box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
+  transform-origin: top right; animation: menu-abre .16s var(--curva);
+}
+@keyframes menu-abre { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
+.menu-planilha__opcoes button {
+  display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border: 0; border-radius: 8px; background: none;
+  color: var(--texto); text-align: left; font: inherit; cursor: pointer;
+}
+.menu-planilha__opcoes button:hover:not(:disabled), .menu-planilha__opcoes button:focus-visible { background: var(--superficie-2); outline: none; }
+.menu-planilha__opcoes button:disabled { opacity: .5; cursor: not-allowed; }
+.menu-planilha__opcoes svg { margin-top: 1px; color: var(--texto-2); flex: none; }
+.menu-planilha__opcoes strong { display: block; font-size: 14px; font-weight: 500; }
+.menu-planilha__opcoes strong + span { display: block; font-size: 12.5px; color: var(--texto-3); }
+@media (min-width: 641px) { .menu-planilha .botao-icone--alto { width: 40px; height: 40px; } }
+@media (prefers-reduced-motion: reduce) { .menu-planilha__opcoes { animation: none; } }
