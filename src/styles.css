@@ -972,8 +972,7 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
   .segmentos--status::-webkit-scrollbar { display: none; }
   .segmentos--status .segmento { flex: none; }
 }
-/* Selos de canal: Site neutro, WhatsApp verde, Instagram rosa */
-.origem-tag--whatsapp { color: #15803D; background: color-mix(in srgb, #25D366 14%, var(--superficie)); }
-.origem-tag--instagram { background: color-mix(in srgb, #D62976 11%, var(--superficie)); }
+/* Selos de canal: fundo neutro igual para todos; só o ícone e o texto mudam de cor (WhatsApp verde, Instagram rosa) */
+.origem-tag--whatsapp { color: #15803D; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .origem-tag--whatsapp { color: #4ADE80; } }
 :root[data-theme="dark"] .origem-tag--whatsapp { color: #4ADE80; }
