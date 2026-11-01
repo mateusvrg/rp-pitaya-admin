@@ -137,7 +137,7 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
     const val = validas(doPeriodo)
     const porCanal = CANAIS.map((c) => {
       const l = val.filter((r) => canalDe(r) === c.id)
-      return { id: c.id, nome: c.nome, cor: COR_CANAL[c.id], valor: l.length, extra: l.length ? `${reais(soma(l))} · média ${reais(soma(l) / l.length)}` : reais(0) }
+      return { id: c.id, nome: c.nome, cor: COR_CANAL[c.id], valor: l.length, extra: reais(soma(l)) }
     })
     const porModo = [['entrega', 'Entrega', '#2563EB'], ['retirada', 'Retirada no sítio', '#D97706']].map(([id, nome, cor]) => {
       const l = val.filter((r) => r.modo === id)
