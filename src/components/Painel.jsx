@@ -163,7 +163,7 @@ export function Painel() {
         )}
       </main>
 
-      <TempoMargem tempo={tempo} />
+      <TempoMargem tempo={tempo} aba={rota.aba} />
 
       {navegacao('nav-inferior')}
     </div>

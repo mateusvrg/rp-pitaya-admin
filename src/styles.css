@@ -152,7 +152,7 @@ textarea.campo { resize: vertical; }
 .login .botao--principal { min-height: 44px; }
 
 /* ===== Estrutura ===== */
-.painel { min-height: 100vh; }
+.painel { min-height: 100vh; position: relative; }
 .marca { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
 .marca__textos { display: flex; flex-direction: column; line-height: 1.15; }
 .marca__sub { font-size: 12px; font-weight: 500; color: var(--texto-3); letter-spacing: 0; }
@@ -427,9 +427,11 @@ th, td { padding: 8px 24px 8px 0; border-bottom: 1px solid var(--borda); }
 .selo--cancelada { color: var(--texto-3); }
 
 .reservas__detalhe {
-  position: sticky; top: 28px; max-height: calc(100vh - 56px); overflow: auto;
+  /* Mesmo topo da barra de busca presa (ao rolar, os dois ficam alinhados) */
+  position: sticky; top: calc(var(--topo-fixo) + 12px); max-height: calc(100vh - var(--topo-fixo) - 24px); overflow: auto;
   background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); box-shadow: var(--sombra);
 }
+@media (min-width: 960px) { .reservas__detalhe { margin-top: 12px; } } /* parado: mesmo topo da busca */
 .detalhe-vazio { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 56px 24px; color: var(--texto-3); font-size: 14px; }
 .detalhe__topo { display: flex; align-items: flex-start; gap: 8px; padding: 16px 12px 14px 20px; border-bottom: 1px solid var(--borda); position: sticky; top: 0; background: var(--superficie); z-index: 1; }
 .detalhe__titulo { flex: 1; min-width: 0; }
@@ -1021,16 +1023,26 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tempo__dia-chuva { color: #60A5FA; } }
 :root[data-theme="dark"] .tempo__dia-chuva { color: #60A5FA; }
 
-/* Margem livre da direita (telas largas): quadro fixo */
+/* Margem livre da direita (telas largas): começa na altura do conteúdo (alinhado com a busca e o card)
+   e, ao rolar, sobe e fica preso no mesmo topo da barra de busca. */
 .tempo-margem { display: none; }
 @media (min-width: 1910px) {
-  .tempo-margem {
-    display: block; position: fixed; top: 28px; right: 24px; width: 262px; max-height: calc(100vh - 56px); overflow: auto; z-index: 10;
+  .tempo-margem { display: block; position: absolute; right: 24px; bottom: 0; width: 262px; z-index: 10; pointer-events: none; }
+  .tempo-margem__card {
+    position: sticky; top: calc(var(--topo-fixo) + 12px); pointer-events: auto; max-height: calc(100vh - var(--topo-fixo) - 24px); overflow: auto;
     background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); box-shadow: var(--sombra); padding: 16px;
     scrollbar-width: thin; animation: pop-entra .3s var(--curva);
   }
-  body:has(.faixa-teste) .tempo-margem { top: 56px; }
 }
+.tempo__mais {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 30px; margin-top: -4px; border: 0; border-radius: 8px;
+  background: none; color: var(--texto-3); font: 500 12.5px var(--fonte); cursor: pointer;
+}
+.tempo__mais:hover { background: var(--superficie-2); color: var(--texto); }
+.tempo__mais svg { transition: transform .2s var(--curva); }
+.tempo__mais[aria-expanded="true"] svg { transform: rotate(180deg); }
+.tempo__alerta-chip { white-space: nowrap; padding: 1px 8px; border-radius: 10px; background: color-mix(in srgb, #EA580C 14%, var(--superficie)); color: #C2410C; font-weight: 600; font-size: 11.5px; }
+.tempo__extra { display: flex; flex-direction: column; gap: 14px; animation: desce-entra var(--mov) var(--curva); }
 /* Telas médias: só ícone + temperatura ao lado do "Atualizado às", abre o quadro ao clicar */
 .tempo-resumo { position: relative; display: none; }
 @media (min-width: 960px) and (max-width: 1909px) { .tempo-resumo { display: block; } }

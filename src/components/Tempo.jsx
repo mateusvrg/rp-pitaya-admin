@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { lerTempo } from '../lib/tempo'
+import { IconeSetaBaixo } from './Icones'
 
 // Ícones do céu (desenhados aqui, coloridos).
 function IconeCeu({ ceu, tamanho = 40 }) {
@@ -38,8 +39,11 @@ export function useTempo() {
   return tempo
 }
 
-export function QuadroTempo({ tempo }) {
+// recolhivel: mostra só o principal (temperatura e céu) e o resto abre na setinha. A escolha fica salva no navegador.
+export function QuadroTempo({ tempo, recolhivel = false }) {
   const { agora, dias, alertas, chuva } = tempo
+  const [aberto, setAberto] = useState(() => { try { return !recolhivel || localStorage.getItem('rp-tempo-aberto') === '1' } catch { return !recolhivel } })
+  const alternar = () => setAberto((a) => { try { localStorage.setItem('rp-tempo-aberto', a ? '0' : '1') } catch { /* sem armazenamento */ } return !a })
   return (
     <div className="tempo">
       <div className="tempo__topo">
@@ -54,6 +58,14 @@ export function QuadroTempo({ tempo }) {
           <div className="tempo__ceu">{agora.ceu.nome}</div>
         </div>
       </div>
+      {recolhivel && (
+        <button type="button" className="tempo__mais" aria-expanded={aberto} onClick={alternar}>
+          {!aberto && alertas.length > 0 && <span className="tempo__alerta-chip">{alertas.length} {alertas.length === 1 ? 'alerta' : 'alertas'}</span>}
+          <span>{aberto ? 'Menos' : 'Mais detalhes'}</span>
+          <IconeSetaBaixo tamanho={16} />
+        </button>
+      )}
+      {aberto && (<div className="tempo__extra">
       <dl className="tempo__detalhes">
         <div><dt>Sensação</dt><dd>{graus(agora.sensacao)}</dd></div>
         <div><dt>Umidade</dt><dd>{Math.round(agora.umid ?? 0)}%</dd></div>
@@ -89,14 +101,33 @@ export function QuadroTempo({ tempo }) {
           ? <ul className="tempo__alertas">{alertas.map((a) => <li key={a.texto} className={`tempo__alerta tempo__alerta--${a.tipo}`}>{a.texto}</li>)}</ul>
           : <p className="tempo__ok">Sem geada, calor forte, chuva forte ou vento forte nos próximos dias.</p>}
       </div>
+      </div>)}
     </div>
   )
 }
 
 // Telas largas: quadro fixo na margem da direita. Telas médias: só ícone + temperatura no topo, que abre o quadro.
-export function TempoMargem({ tempo }) {
+export function TempoMargem({ tempo, aba }) {
+  const [topo, setTopo] = useState(null)
+  // Começa na mesma altura do conteúdo da aba (alinhado com a busca e com o card da direita).
+  useEffect(() => {
+    const medir = () => {
+      // Alinha com a busca (Reservas/Variedades) ou, nas outras abas, com o começo do conteúdo.
+      const el = document.querySelector('.conteudo-aba .barra-filtros .busca') ?? document.querySelector('.conteudo-aba')
+      const painel = document.querySelector('.painel')
+      if (el && painel) setTopo(el.getBoundingClientRect().top - painel.getBoundingClientRect().top)
+    }
+    medir()
+    const t = setTimeout(medir, 400)
+    window.addEventListener('resize', medir)
+    return () => { clearTimeout(t); window.removeEventListener('resize', medir) }
+  }, [tempo, aba])
   if (!tempo) return null
-  return <aside className="tempo-margem" aria-label="Tempo no sítio"><QuadroTempo tempo={tempo} /></aside>
+  return (
+    <aside className="tempo-margem" aria-label="Tempo no sítio" style={{ top: topo ?? 84 }}>
+      <div className="tempo-margem__card"><QuadroTempo tempo={tempo} recolhivel /></div>
+    </aside>
+  )
 }
 
 export function TempoResumo({ tempo }) {
