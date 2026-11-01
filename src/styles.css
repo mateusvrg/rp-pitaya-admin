@@ -977,3 +977,15 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
 .origem-tag--whatsapp { color: #15803D; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .origem-tag--whatsapp { color: #4ADE80; } }
 :root[data-theme="dark"] .origem-tag--whatsapp { color: #4ADE80; }
+
+/* Campo de senha com o olhinho para mostrar/esconder */
+.campo-senha { position: relative; display: block; }
+.campo-senha .campo { padding-right: 46px; }
+.campo-senha__olho {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 36px; height: 34px; display: grid; place-items: center;
+  border: 0; border-radius: 6px; background: none; color: var(--texto-3); cursor: pointer;
+}
+.campo-senha__olho:hover { color: var(--texto); background: var(--superficie-2); }
+.campo-senha__olho[aria-pressed="true"] { color: var(--destaque); }
+.campo-senha__olho:focus-visible { outline: 2px solid var(--destaque); outline-offset: 1px; }
+.campo-senha input::-ms-reveal, .campo-senha input::-ms-clear { display: none; } /* Edge já tem um olhinho próprio: some para não ficar dois */

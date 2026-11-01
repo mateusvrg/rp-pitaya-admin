@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { aoMudarSessao, lerRetornoDoEmail, sair, sessaoAtual } from './lib/supabase'
+import { aoMudarSessao, completarUsuario, lerRetornoDoEmail, sair, sessaoAtual } from './lib/supabase'
 import { souAdmin } from './lib/dados'
 import { Login } from './components/Login'
 import { NovaSenha } from './components/NovaSenha'
@@ -24,6 +24,8 @@ function Telas() {
   const [trocandoSenha, setTrocandoSenha] = useState(retorno === 'recovery')
 
   useEffect(() => aoMudarSessao(setSessao), [])
+  // Sessão vinda do link do e-mail (ou salva sem o e-mail): busca quem é o usuário.
+  useEffect(() => { completarUsuario() }, [])
 
   // Confere o acesso só quando a pessoa entra ou troca de conta (não a cada renovação do login).
   const temSessao = Boolean(sessao)

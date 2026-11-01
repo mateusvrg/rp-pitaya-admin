@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { definirNovaSenha } from '../lib/supabase'
+import { CampoSenha } from './CampoSenha'
 
 export function NovaSenha({ aoConcluir }) {
   const [senha, setSenha] = useState('')
@@ -26,12 +27,8 @@ export function NovaSenha({ aoConcluir }) {
     <div className="tela-centro">
       <form className="login form" onSubmit={aoEnviar} noValidate>
         <h1 className="login__titulo">Crie sua senha nova</h1>
-        <label className="campo-rotulo">Senha nova
-          <input className="campo" type="password" autoComplete="new-password" value={senha} onChange={(e) => setSenha(e.target.value)} autoFocus />
-        </label>
-        <label className="campo-rotulo">Repita a senha
-          <input className="campo" type="password" autoComplete="new-password" value={repetir} onChange={(e) => setRepetir(e.target.value)} />
-        </label>
+        <CampoSenha rotulo="Senha nova" autoComplete="new-password" value={senha} onChange={(e) => setSenha(e.target.value)} autoFocus />
+        <CampoSenha rotulo="Repita a senha" autoComplete="new-password" value={repetir} onChange={(e) => setRepetir(e.target.value)} />
         {erro && <p className="erro" role="alert">{erro}</p>}
         <button type="submit" className="botao botao--principal" disabled={ocupado}>{ocupado ? 'Salvando...' : 'Salvar senha'}</button>
       </form>

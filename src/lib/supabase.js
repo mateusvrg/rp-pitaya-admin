@@ -81,7 +81,19 @@ export const pedirNovaSenha = (email) =>
 
 export async function definirNovaSenha(senha) {
   const token = await tokenValido()
-  await auth('user', { password: senha }, { token, metodo: 'PUT' })
+  const usuario = await auth('user', { password: senha }, { token, metodo: 'PUT' })
+  if (usuario?.email && sessao) salvarSessao({ ...sessao, usuario: { id: usuario.id, email: usuario.email } })
+}
+
+// O link do e-mail ("esqueci minha senha") traz só os tokens, sem o e-mail da pessoa.
+// Aqui buscamos quem é o usuário, para o painel mostrar o e-mail no canto e conferir o acesso certo.
+export async function completarUsuario() {
+  if (!sessao || sessao.usuario?.email) return
+  try {
+    const token = await tokenValido()
+    const u = await auth('user', null, { token, metodo: 'GET' })
+    if (u?.id && sessao) salvarSessao({ ...sessao, usuario: { id: u.id, email: u.email } })
+  } catch { /* sem internet: tenta de novo na próxima vez que abrir */ }
 }
 
 // Link de "esqueci minha senha": o Supabase volta com os tokens no endereço.

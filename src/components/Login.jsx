@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import logo from '../logo.svg'
 import { entrar, pedirNovaSenha } from '../lib/supabase'
+import { CampoSenha } from './CampoSenha'
 
 export function Login() {
   const [modo, setModo] = useState('entrar') // entrar | esqueci | enviado
@@ -50,10 +51,7 @@ export function Login() {
                 onChange={(e) => setEmail(e.target.value)} autoFocus />
             </label>
             {modo === 'entrar' && (
-              <label className="campo-rotulo">Senha
-                <input className="campo" type="password" autoComplete="current-password" value={senha}
-                  onChange={(e) => setSenha(e.target.value)} />
-              </label>
+              <CampoSenha rotulo="Senha" autoComplete="current-password" value={senha} onChange={(e) => setSenha(e.target.value)} />
             )}
             {erro && <p className="erro" role="alert">{erro}</p>}
             <button type="submit" className="botao botao--principal" disabled={ocupado}>
