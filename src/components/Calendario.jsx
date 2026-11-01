@@ -61,6 +61,7 @@ function lerMes(texto) {
 }
 
 // Escolha de período: primeiro clique marca o início, segundo marca o fim.
+// Para ver um dia só, basta escolher o dia e aplicar (ou clicar duas vezes no mesmo dia).
 // Mostra um mês por vez. Setas ← → do teclado trocam o mês; dá para digitar o mês e o ano.
 export function Calendario({ inicial, aoAplicar, aoFechar }) {
   const hoje = zerar(new Date())
@@ -120,9 +121,11 @@ export function Calendario({ inicial, aoAplicar, aoFechar }) {
 
   const proximoBloqueado = somarMeses(mes, 1) > mesDe(hoje)
   const anteriorBloqueado = somarMeses(mes, -1) < new Date(ANO_MINIMO, 0, 1)
-  const resumo = de && ate
+  const resumo = de && ate && mesmoDia(de, ate)
+    ? `Só o dia ${formatarData(de)}.`
+    : de && ate
     ? `${formatarData(de)} a ${formatarData(ate)} (${diasEntre(de, ate)} ${diasEntre(de, ate) === 1 ? 'dia' : 'dias'})`
-    : de ? `Início: ${formatarData(de)}. Agora escolha o último dia.` : 'Escolha o primeiro dia do período.'
+    : de ? `${formatarData(de)}. Aplique para ver só este dia, ou escolha o último dia do período.` : 'Escolha um dia ou o primeiro dia do período.'
 
   return (
     <>
@@ -148,7 +151,7 @@ export function Calendario({ inicial, aoAplicar, aoFechar }) {
       <p className="calendario__resumo" aria-live="polite">{resumo}</p>
       <div className="calendario__rodape">
         <button type="button" className="botao-fantasma calendario__fechar" onClick={aoFechar}><IconeFechar tamanho={18} /> Cancelar</button>
-        <button type="button" className="botao botao--principal" disabled={!de || !ate} onClick={() => aoAplicar({ de, ate })}>Aplicar</button>
+        <button type="button" className="botao botao--principal" disabled={!de} onClick={() => aoAplicar({ de, ate: ate ?? de })}>Aplicar</button>
       </div>
     </div>
     </>

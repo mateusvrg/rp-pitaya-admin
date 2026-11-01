@@ -183,7 +183,7 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
               <button type="button" className="segmento segmento--calendario" aria-pressed={Boolean(periodo)}
                 aria-expanded={calendarioAberto} aria-label={periodo ? undefined : "Período"} onClick={() => setCalendarioAberto((a) => !a)}>
                 <IconeCalendario tamanho={16} />
-                {periodo ? <span>{`${curta(periodo.de)} – ${curta(periodo.ate)}`}</span> : <span className="periodo-rotulo">Período</span>}
+                {periodo ? <span>{periodo.de.getTime() === periodo.ate.getTime() ? curta(periodo.de) : `${curta(periodo.de)} – ${curta(periodo.ate)}`}</span> : <span className="periodo-rotulo">Período</span>}
               </button>
               {periodo && (
                 <button type="button" className="segmento segmento--limpar" onClick={() => setPeriodo(null)} aria-label="Tirar o filtro de período">

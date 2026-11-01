@@ -11,10 +11,11 @@ const AGRUPAMENTO = { dia: 'por dia', semana: 'por semana', mes: 'por mês' }
 // Variação em relação ao período do mesmo tamanho logo antes, em texto.
 // Ex.: "-12% vs. 7 dias anteriores"
 function variacao(atual, anterior, anteriores) {
-  if (!anterior) return atual ? `sem dados nos ${anteriores}` : null
+  const plural = anteriores.endsWith('es') // "7 dias anteriores" x "dia anterior"
+  if (!anterior) return atual ? `sem dados ${plural ? 'nos' : 'no'} ${anteriores}` : null
   const pct = Math.round(((atual - anterior) / anterior) * 100)
-  if (pct === 0) return `igual aos ${anteriores}`
-  if (pct > 999) return `muito acima dos ${anteriores}`
+  if (pct === 0) return `igual ${plural ? 'aos' : 'ao'} ${anteriores}`
+  if (pct > 999) return `muito acima ${plural ? 'dos' : 'do'} ${anteriores}`
   return `${pct > 0 ? '+' : '−'}${Math.abs(pct)}% vs. ${anteriores}`
 }
 
@@ -154,7 +155,7 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
           <button type="button" className="segmento segmento--calendario" aria-pressed={escolha.id === 'custom'}
             aria-expanded={calendarioAberto} onClick={() => setCalendarioAberto((a) => !a)}>
             <IconeCalendario tamanho={16} />
-            <span>{escolha.id === 'custom' ? `${curta(escolha.de)} – ${curta(escolha.ate)}` : 'Personalizado'}</span>
+            <span>{escolha.id === 'custom' ? (escolha.de.getTime() === escolha.ate.getTime() ? curta(escolha.de) : `${curta(escolha.de)} – ${curta(escolha.ate)}`) : 'Personalizado'}</span>
           </button>
         </div>
         {calendarioAberto && (
