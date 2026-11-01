@@ -3,7 +3,7 @@ import { CANAIS, STATUS, lancarReservas, nomeCanal, nomeStatus } from '../lib/da
 import { lerPlanilha } from '../lib/planilha'
 import { baixarModelo, interpretar, marcarRepetidas, paraBanco, validarLinha } from '../lib/importar'
 import { reais, semAcento, telefone } from '../lib/formato'
-import { IconeBaixar, IconeFechar, IconeVoltar, IconeEnviar, IconeEditar } from './Icones'
+import { IconeBaixar, IconeFechar, IconeVoltar, IconeEditar } from './Icones'
 
 const dataCurta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 
@@ -97,7 +97,7 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
 
         <label className={`importar__area${arrastando ? ' importar__area--arrastando' : ''}${lista ? ' importar__area--pequena' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setArrastando(true) }} onDragLeave={() => setArrastando(false)} onDrop={soltar}>
-          <IconeEnviar tamanho={lista ? 18 : 24} />
+          <IconeBaixar tamanho={lista ? 18 : 24} />
           {lista
             ? <span><strong>{arquivo?.name}</strong> · trocar arquivo</span>
             : <span><strong>Escolher planilha</strong><span className="so-computador"> ou arraste aqui</span><br /><span className="apoio">Excel (.xlsx) ou .csv</span></span>}

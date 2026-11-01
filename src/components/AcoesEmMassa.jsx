@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { STATUS, atualizarVarias, nomeStatus } from '../lib/dados'
 import { exportarReservas } from '../lib/importar'
 import { reais, unidades } from '../lib/formato'
-import { IconePlanilhaSair, IconeFechar, IconeVoltar } from './Icones'
+import { IconeEnviar, IconeFechar, IconeVoltar } from './Icones'
 
 // Painel lateral que aparece no lugar do detalhe quando há reservas marcadas na lista.
 export function AcoesEmMassa({ reservas, produtos, aoDesmarcar, aoLimpar, aoVoltar, aoAtualizar }) {
@@ -102,7 +102,7 @@ export function AcoesEmMassa({ reservas, produtos, aoDesmarcar, aoLimpar, aoVolt
 
         <div className="bloco">
           <button type="button" className="botao botao--secundario" onClick={() => exportarReservas(produtos, reservas)}>
-            <IconePlanilhaSair tamanho={18} /> Exportar planilha das selecionadas
+            <IconeEnviar tamanho={18} /> Exportar planilha das selecionadas
           </button>
           <button type="button" className="link massa-limpar" onClick={aoLimpar}>Limpar seleção</button>
           <p className="massa-dica">Para chamar no WhatsApp, abra cada reserva separadamente.</p>
