@@ -7,6 +7,7 @@ import { Dashboard } from './Dashboard'
 import { Reservas } from './Reservas'
 import { Variedades } from './Variedades'
 import { useDeslizarAbas } from './useDeslizarAbas'
+import { TempoMargem, TempoResumo, useTempo } from './Tempo'
 import { IconeAtualizar, IconeAuto, IconeDashboard, IconeLua, IconeReservas, IconeSair, IconeSol, IconeVariedades } from './Icones'
 
 const IDS_ABAS = ['dashboard', 'reservas', 'variedades']
@@ -88,6 +89,7 @@ export function Painel() {
   const email = sessaoAtual()?.usuario?.email
   const tituloAba = ABAS.find((a) => a.id === rota.aba)?.nome
   const deslizar = useDeslizarAbas(IDS_ABAS, rota.aba, irPara)
+  const tempo = useTempo()
 
   const navegacao = (classe) => (
     <nav className={classe} aria-label="Seções do painel">
@@ -141,10 +143,13 @@ export function Painel() {
           <>
             <div className="cabecalho">
               <h1>{tituloAba}</h1>
-              <button type="button" className="atualizado" onClick={carregar} disabled={atualizando}>
-                <IconeAtualizar tamanho={16} className={atualizando ? 'gira' : ''} />
-                <span>Atualizado às {atualizadoEm?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-              </button>
+              <div className="cabecalho__lado">
+                <TempoResumo tempo={tempo} />
+                <button type="button" className="atualizado" onClick={carregar} disabled={atualizando}>
+                  <IconeAtualizar tamanho={16} className={atualizando ? 'gira' : ''} />
+                  <span>Atualizado às {atualizadoEm?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                </button>
+              </div>
             </div>
             <div className={`conteudo-aba ${deslizar.classe}`} style={deslizar.estilo}>
             {rota.aba === 'dashboard' && <Dashboard reservas={reservas} produtos={produtos} irPara={irPara} />}
@@ -157,6 +162,8 @@ export function Painel() {
           </>
         )}
       </main>
+
+      <TempoMargem tempo={tempo} />
 
       {navegacao('nav-inferior')}
     </div>
