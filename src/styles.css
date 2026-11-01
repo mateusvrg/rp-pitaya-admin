@@ -413,7 +413,7 @@ th, td { padding: 8px 24px 8px 0; border-bottom: 1px solid var(--borda); }
 .linha__principal { grid-area: principal; display: flex; flex-direction: column; min-width: 0; }
 .linha__nome { font-weight: 500; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .linha__resumo { font-size: 13px; color: var(--texto-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.linha__data { grid-area: data; font-size: 12.5px; color: var(--texto-3); }
+.linha__data { grid-area: data; display: flex; align-items: center; gap: 8px; font-size: 12.5px; line-height: 18px; color: var(--texto-3); }
 .linha__lado { grid-area: lado; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; }
 .linha__total { font-weight: 500; font-size: 14px; }
 
@@ -810,7 +810,7 @@ body { transition: background-color var(--mov) ease, color var(--mov) ease; }
 .ferramentas__botoes { display: flex; gap: 8px; flex: none; }
 .ferramentas__botoes .botao[aria-pressed="true"] { border-color: var(--texto-2); background: var(--superficie-2); }
 .origem-tag {
-  display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 0 7px 0 5px; height: 18px; vertical-align: 1px;
+  display: inline-flex; align-items: center; gap: 4px; padding: 0 7px 0 5px; height: 18px; line-height: 1;
   border-radius: 9px; background: var(--superficie-2); color: var(--texto-2); font-size: 11.5px; font-weight: 500;
 }
 .filtro-celular__extra { padding-left: 8px; border-left: 1px solid var(--borda); color: var(--texto-2); white-space: nowrap; }
@@ -1026,8 +1026,10 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
 /* Margem livre da direita (telas largas): começa na altura do conteúdo (alinhado com a busca e o card)
    e, ao rolar, sobe e fica preso no mesmo topo da barra de busca. */
 .tempo-margem { display: none; }
-@media (min-width: 1910px) {
-  .tempo-margem { display: block; position: absolute; right: 24px; bottom: 0; width: 262px; z-index: 10; pointer-events: none; }
+/* Fica logo depois do conteúdo (fim do conteúdo: 240 da lateral + 1360 de largura máx. − 32 de respiro), com o mesmo vão de 20px
+   que separa a lista do card. Com zoom afastado, continua grudado no conteúdo em vez de ir para o canto. */
+@media (min-width: 1874px) {
+  .tempo-margem { display: block; position: absolute; left: calc(240px + 1360px - 32px + 20px); bottom: 0; width: 262px; z-index: 10; pointer-events: none; }
   .tempo-margem__card {
     position: sticky; top: calc(var(--topo-fixo) + 12px); pointer-events: auto; max-height: calc(100vh - var(--topo-fixo) - 24px); overflow: auto;
     background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); box-shadow: var(--sombra); padding: 16px;
@@ -1045,7 +1047,7 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
 .tempo__extra { display: flex; flex-direction: column; gap: 14px; animation: desce-entra var(--mov) var(--curva); }
 /* Telas médias: só ícone + temperatura ao lado do "Atualizado às", abre o quadro ao clicar */
 .tempo-resumo { position: relative; display: none; }
-@media (min-width: 960px) and (max-width: 1909px) { .tempo-resumo { display: block; } }
+@media (min-width: 960px) and (max-width: 1873px) { .tempo-resumo { display: block; } }
 .tempo-resumo__botao {
   position: relative; display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 10px 0 6px; border: 1px solid var(--borda);
   border-radius: 18px; background: var(--superficie); color: var(--texto); font: 600 14px var(--fonte); cursor: pointer;
