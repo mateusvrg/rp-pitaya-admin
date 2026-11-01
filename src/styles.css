@@ -1104,10 +1104,11 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
     border: 1px solid var(--borda); border-radius: var(--raio); background: var(--superficie); box-shadow: var(--sombra);
   }
 }
-/* Celular: também em cartões separados (com 12px entre eles) e com o texto centralizado */
+/* Celular: também em cartões separados (com 12px entre eles); o Ticket médio, que ocupa a linha toda, fica centralizado */
 @media (max-width: 760px) {
   .metricas { gap: 12px; background: none; border: 0; box-shadow: none; }
   .metrica, .metrica:first-child, .metrica:nth-child(n) {
-    border: 1px solid var(--borda); border-radius: var(--raio); background: var(--superficie); box-shadow: var(--sombra); text-align: center;
+    border: 1px solid var(--borda); border-radius: var(--raio); background: var(--superficie); box-shadow: var(--sombra);
   }
+  .metrica:nth-child(5) { text-align: center; }
 }
