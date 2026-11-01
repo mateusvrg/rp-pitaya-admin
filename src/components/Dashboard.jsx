@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { STATUS } from '../lib/dados'
+import { CANAIS, STATUS, canalDe } from '../lib/dados'
 import { reais, unidades } from '../lib/formato'
 import { PERIODOS, lerPeriodo, montarPeriodo, salvarPeriodo } from '../lib/periodos'
 import { GraficoLinha } from './GraficoLinha'
+import { GraficoColunas } from './GraficoColunas'
 import { Calendario } from './Calendario'
 import { IconeCalendario } from './Icones'
 
@@ -55,6 +56,44 @@ function BarrasHorizontais({ linhas, formatar = (v) => v, aoClicar }) {
   )
 }
 
+// Cores dos canais nos gráficos (as mesmas dos selos da lista: WhatsApp verde, Instagram rosa).
+const COR_CANAL = { site: '#64748B', whatsapp: '#16A34A', instagram: '#D62976' }
+const pct = (v, total) => (total ? Math.round((v / total) * 100) : 0)
+
+// Uma barra dividida em partes (a "pizza" deitada) e, embaixo, a lista com número, % e valor de cada parte.
+function BarraDividida({ partes, aoClicar, vazio }) {
+  const total = partes.reduce((s, p) => s + p.valor, 0)
+  if (!total) return <p className="apoio vazio-grafico">{vazio}</p>
+  return (
+    <>
+      <div className="dividida" role="img" aria-label={partes.map((p) => `${p.nome}: ${pct(p.valor, total)}%`).join(', ')}>
+        {partes.filter((p) => p.valor).map((p) => (
+          <span key={p.id} className="dividida__parte" style={{ flexGrow: p.valor, background: p.cor }} title={`${p.nome}: ${pct(p.valor, total)}%`} />
+        ))}
+      </div>
+      <ul className="dividida__lista">
+        {partes.map((p) => {
+          const conteudo = (
+            <>
+              <span className="dividida__nome"><i style={{ background: p.cor }} />{p.nome}</span>
+              <span className="dividida__qtd">{p.valor}</span>
+              <span className="dividida__pct">{pct(p.valor, total)}%</span>
+              <span className="dividida__extra">{p.extra}</span>
+            </>
+          )
+          return (
+            <li key={p.id}>
+              {aoClicar
+                ? <button type="button" className="dividida__linha dividida__linha--botao" onClick={() => aoClicar(p)}>{conteudo}</button>
+                : <div className="dividida__linha">{conteudo}</div>}
+            </li>
+          )
+        })}
+      </ul>
+    </>
+  )
+}
+
 function Tabela({ cabecalho, linhas }) {
   return (
     <details className="ver-tabela">
@@ -72,6 +111,7 @@ function Tabela({ cabecalho, linhas }) {
 export function Dashboard({ reservas, produtos, irPara }) {
   const [escolha, setEscolha] = useState(lerPeriodo)
   const [calendarioAberto, setCalendarioAberto] = useState(false)
+  const [visao, setVisao] = useState('total') // gráfico principal: 'total' (linha) ou 'canal' (colunas por canal)
   const escolher = (nova) => { setEscolha(nova); salvarPeriodo(nova); setCalendarioAberto(false) }
   // Mostra o ano só quando não é o ano atual (ex.: 20/03/25).
 const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...(d.getFullYear() !== new Date().getFullYear() && { year: '2-digit' }) })
@@ -86,11 +126,22 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
     const pagas = (l) => l.filter((r) => r.status === 'paga' || r.status === 'entregue')
     const soma = (l) => l.reduce((s, r) => s + r.total_estimado, 0)
 
-    const pontos = baldes.map((b) => ({ ...b, valor: 0 }))
+    const pontos = baldes.map((b) => ({ ...b, valor: 0, valores: {} }))
     doPeriodo.forEach((r) => {
       const t = new Date(r.criado_em)
       const i = pontos.findIndex((b) => t >= b.inicio && t < b.fim)
-      if (i >= 0) pontos[i].valor += 1
+      if (i >= 0) { pontos[i].valor += 1; const c = canalDe(r); pontos[i].valores[c] = (pontos[i].valores[c] ?? 0) + 1 }
+    })
+
+    // Por canal e por recebimento: sem as canceladas.
+    const val = validas(doPeriodo)
+    const porCanal = CANAIS.map((c) => {
+      const l = val.filter((r) => canalDe(r) === c.id)
+      return { id: c.id, nome: c.nome, cor: COR_CANAL[c.id], valor: l.length, extra: l.length ? `${reais(soma(l))} · média ${reais(soma(l) / l.length)}` : reais(0) }
+    })
+    const porModo = [['entrega', 'Entrega', '#2563EB'], ['retirada', 'Retirada no sítio', '#D97706']].map(([id, nome, cor]) => {
+      const l = val.filter((r) => r.modo === id)
+      return { id, nome, cor, valor: l.length, extra: `${l.reduce((s, r) => s + unidades(r), 0)} pitayas` }
     })
 
     const unidadesPor = new Map()
@@ -104,6 +155,8 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
     const antValidas = validas(doAnterior).length
     const atualValor = soma(validas(doPeriodo))
     const antValor = soma(validas(doAnterior))
+    const ticket = atualValidas ? atualValor / atualValidas : 0
+    const ticketAnt = antValidas ? antValor / antValidas : 0
 
     return {
       periodo,
@@ -119,6 +172,12 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
       qtdPagas: pagas(doPeriodo).length,
       porStatus: STATUS.map((s) => ({ id: s.id, nome: s.plural, cor: `var(--st-${s.id})`, valor: doPeriodo.filter((r) => r.status === s.id).length })),
       porVariedade,
+      porCanal,
+      porModo,
+      ticket,
+      variacaoTicket: atualValidas ? variacao(Math.round(ticket * 100), Math.round(ticketAnt * 100), periodo.anteriores) : null,
+      // Cor só quando a mudança aparece no texto (arredondado); "igual" fica neutro.
+      tendTicket: !ticketAnt || Math.round(((ticket - ticketAnt) / ticketAnt) * 100) === 0 ? null : ticket > ticketAnt ? 'sobe' : 'desce',
       vazio: doPeriodo.length === 0,
     }
   }, [reservas, produtos, escolha])
@@ -170,16 +229,45 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
         <Metrica rotulo="Pitayas reservadas" valor={dados.unidades} detalhe="unidades, sem as canceladas" />
         <Metrica rotulo="Valor reservado" valor={reais(dados.valorReservado)} detalhe={dados.variacaoValor} tendencia={dados.tendValor} />
         <Metrica rotulo="Valor pago" valor={reais(dados.valorPago)} detalhe={`${dados.qtdPagas} ${dados.qtdPagas === 1 ? 'reserva paga ou entregue' : 'reservas pagas ou entregues'}`} />
+        <Metrica rotulo="Ticket médio" valor={reais(dados.ticket)} detalhe={dados.variacaoTicket ?? 'por reserva, sem as canceladas'} tendencia={dados.tendTicket} />
       </section>
 
       <section className="bloco-grafico bloco-grafico--largo">
-        <h2>Reservas {AGRUPAMENTO[dados.periodo.agrupar]}</h2>
-        <p className="apoio">{dados.periodo.descricao}, todas as reservas recebidas.</p>
-        <GraficoLinha pontos={dados.pontos} descricao={`Reservas ${AGRUPAMENTO[dados.periodo.agrupar]}, ${dados.periodo.nome}`} />
-        <Tabela cabecalho={['Período', 'Reservas']} linhas={[...dados.pontos].reverse().map((p) => [p.rotuloLongo, p.valor])} />
+        <div className="bloco-grafico__topo">
+          <div>
+            <h2>Reservas {AGRUPAMENTO[dados.periodo.agrupar]}</h2>
+            <p className="apoio">{dados.periodo.descricao}, todas as reservas recebidas{visao === 'canal' ? ', por canal' : ''}.</p>
+          </div>
+          <div className="segmentos segmentos--pequeno" role="group" aria-label="Como mostrar">
+            <button type="button" className="segmento" aria-pressed={visao === 'total'} onClick={() => setVisao('total')}>Total</button>
+            <button type="button" className="segmento" aria-pressed={visao === 'canal'} onClick={() => setVisao('canal')}>Por canal</button>
+          </div>
+        </div>
+        {visao === 'total'
+          ? <GraficoLinha pontos={dados.pontos} descricao={`Reservas ${AGRUPAMENTO[dados.periodo.agrupar]}, ${dados.periodo.nome}`} />
+          : (
+            <>
+              <GraficoColunas pontos={dados.pontos} series={CANAIS.map((c) => ({ ...c, cor: COR_CANAL[c.id] }))}
+                descricao={`Reservas por canal ${AGRUPAMENTO[dados.periodo.agrupar]}, ${dados.periodo.nome}`} />
+              <p className="legenda">{CANAIS.map((c) => <span key={c.id}><i style={{ background: COR_CANAL[c.id] }} />{c.nome}</span>)}</p>
+            </>
+          )}
+        <Tabela cabecalho={['Período', 'Reservas', ...CANAIS.map((c) => c.nome)]}
+          linhas={[...dados.pontos].reverse().map((p) => [p.rotuloLongo, p.valor, ...CANAIS.map((c) => p.valores[c.id] ?? 0)])} />
       </section>
 
       <div className="graficos">
+        <section className="bloco-grafico">
+          <h2>Reservas por canal</h2>
+          <p className="apoio">De onde vieram as reservas do período, sem as canceladas. Toque para ver.</p>
+          <BarraDividida partes={dados.porCanal} vazio="Nenhuma reserva neste período."
+            aoClicar={(p) => irPara('reservas', `canal:${p.id}`)} />
+        </section>
+        <section className="bloco-grafico">
+          <h2>Entrega ou retirada</h2>
+          <p className="apoio">Como as reservas do período vão chegar ao cliente, sem as canceladas.</p>
+          <BarraDividida partes={dados.porModo} vazio="Nenhuma reserva neste período." />
+        </section>
         <section className="bloco-grafico">
           <h2>Reservas por status</h2>
           <p className="apoio">Toque em um status para ver as reservas.</p>

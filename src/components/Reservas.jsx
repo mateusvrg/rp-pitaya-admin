@@ -21,7 +21,8 @@ export function Selo({ status }) {
 }
 
 export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSelecionar, aoAtualizar, aoRecarregar }) {
-  const [filtro, setFiltro] = useState(filtroInicial ?? 'ativas')
+  const doCanal = filtroInicial?.startsWith('canal:') ? filtroInicial.slice(6) : null
+  const [filtro, setFiltro] = useState(doCanal ? 'todas' : (filtroInicial ?? 'ativas'))
   const [busca, setBusca] = useState('')
   const barra = useBarraFixa()
   const [recado, setRecado] = useState('')
@@ -29,7 +30,7 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
   const [acoesAbertas, setAcoesAbertas] = useState(false) // celular: painel de ações em tela cheia
   const [periodo, setPeriodo] = useState(null) // { de, ate } escolhido no calendário, ou null = qualquer data
   const [calendarioAberto, setCalendarioAberto] = useState(false)
-  const [canal, setCanal] = useState(null) // null = todos, 'site', 'whatsapp' ou 'instagram'
+  const [canal, setCanal] = useState(doCanal) // null = todos, 'site', 'whatsapp' ou 'instagram'
   const [lancando, setLancando] = useState(null) // null | 'nova' | 'importar' (painel da direita)
 
   // Abrir uma reserva da lista fecha o formulário de nova reserva / importação.

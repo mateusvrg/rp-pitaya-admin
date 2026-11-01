@@ -1059,3 +1059,41 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
   background: var(--superficie); border: 1px solid var(--borda-forte); border-radius: 12px; padding: 16px; box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
   transform-origin: top right; animation: menu-abre .16s var(--curva);
 }
+
+/* ===== Dashboard: canais, entrega x retirada, gráfico por canal ===== */
+.metricas { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1180px) and (min-width: 761px) {
+  .metricas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .metrica:nth-child(4) { border-left: 0; }
+  .metrica:nth-child(n+4) { border-top: 1px solid var(--borda); }
+}
+@media (max-width: 760px) { .metrica:nth-child(5) { border-left: 0; } }
+.bloco-grafico__topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.segmentos--pequeno .segmento { min-height: 28px; font-size: 13px; }
+.legenda { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12.5px; color: var(--texto-2); margin-top: 4px; }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.legenda i, .dividida__nome i, .dica__serie i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.dica--colunas { gap: 2px; }
+.dica__serie { display: flex; align-items: center; gap: 6px; }
+.dividida { display: flex; gap: 3px; height: 14px; margin-top: 14px; border-radius: 7px; overflow: hidden; }
+.dividida__parte { display: block; min-width: 6px; transition: flex-grow .45s var(--curva); animation: barra-cresce .6s var(--curva); transform-origin: left center; }
+.dividida__lista { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+.dividida__linha {
+  display: grid; grid-template-columns: minmax(0, 1fr) 2.5rem 3rem minmax(0, 1.4fr); align-items: center; gap: 10px;
+  width: 100%; min-height: 36px; padding: 2px 8px; border: 0; border-radius: 6px; background: none; text-align: left; font: inherit; font-size: 13.5px; color: var(--texto-2);
+}
+.dividida__linha--botao { cursor: pointer; }
+.dividida__linha--botao:hover { background: var(--superficie-2); color: var(--texto); }
+.dividida__nome { display: inline-flex; align-items: center; gap: 8px; color: var(--texto); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dividida__qtd { text-align: right; font-weight: 600; color: var(--texto); font-variant-numeric: tabular-nums; }
+.dividida__pct { text-align: right; color: var(--texto-3); font-variant-numeric: tabular-nums; }
+.dividida__extra { text-align: right; font-size: 12.5px; color: var(--texto-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.colunas-empilhadas__coluna { transition: opacity .15s; }
+@media (max-width: 640px) {
+  .dividida__linha { grid-template-columns: minmax(0, 1fr) 2.2rem 2.8rem; row-gap: 0; padding: 6px 8px; }
+  .dividida__extra { grid-column: 1 / -1; text-align: left; padding-left: 18px; }
+}
+@media (max-width: 760px) {
+  .metricas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metrica:nth-child(5) { grid-column: 1 / -1; border-left: 0; }
+}
