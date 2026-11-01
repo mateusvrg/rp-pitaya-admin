@@ -27,11 +27,11 @@ export function MenuPlanilha({ total, aoImportar, aoExportar }) { // total: rese
         <div className="menu-planilha__opcoes" role="menu">
           <button type="button" role="menuitem" onClick={() => escolher(aoImportar)}>
             <IconeEnviar tamanho={18} />
-            <strong>Importar planilha</strong>
+            <span><strong>Importar planilha</strong><span>Arquivo .xlsx ou .csv</span></span>
           </button>
           <button type="button" role="menuitem" disabled={total === 0} onClick={() => escolher(aoExportar)}>
             <IconeBaixar tamanho={18} />
-            <strong>Exportar planilha</strong>
+            <span><strong>Exportar planilha</strong><span>{total} {total === 1 ? 'reserva da lista' : 'reservas da lista'}</span></span>
           </button>
         </div>
       )}
