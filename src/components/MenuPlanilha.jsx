@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { IconeBaixar, IconeEnviar, IconePlanilha } from './Icones'
 
 // Um botão só (ícone) para a planilha: ao tocar, abre as opções Importar e Exportar.
-export function MenuPlanilha({ total, aoImportar, aoExportar }) {
+export function MenuPlanilha({ total, aoImportar, aoExportar }) { // total: reservas da lista (sem nenhuma, exportar fica desligado)
   const [aberto, setAberto] = useState(false)
   const caixa = useRef(null)
 
@@ -27,11 +27,11 @@ export function MenuPlanilha({ total, aoImportar, aoExportar }) {
         <div className="menu-planilha__opcoes" role="menu">
           <button type="button" role="menuitem" onClick={() => escolher(aoImportar)}>
             <IconeEnviar tamanho={18} />
-            <span><strong>Importar planilha</strong><span>WhatsApp, Instagram ou outro lugar</span></span>
+            <strong>Importar planilha</strong>
           </button>
           <button type="button" role="menuitem" disabled={total === 0} onClick={() => escolher(aoExportar)}>
             <IconeBaixar tamanho={18} />
-            <span><strong>Exportar planilha</strong><span>{total} {total === 1 ? 'reserva da lista' : 'reservas da lista'}</span></span>
+            <strong>Exportar planilha</strong>
           </button>
         </div>
       )}

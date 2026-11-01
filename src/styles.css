@@ -905,12 +905,12 @@ fieldset.bloco { border: 0; padding: 0; margin: 0; min-width: 0; }
 }
 @keyframes menu-abre { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
 .menu-planilha__opcoes button {
-  display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border: 0; border-radius: 8px; background: none;
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 0; border-radius: 8px; background: none;
   color: var(--texto); text-align: left; font: inherit; cursor: pointer;
 }
 .menu-planilha__opcoes button:hover:not(:disabled), .menu-planilha__opcoes button:focus-visible { background: var(--superficie-2); outline: none; }
 .menu-planilha__opcoes button:disabled { opacity: .5; cursor: not-allowed; }
-.menu-planilha__opcoes svg { margin-top: 1px; color: var(--texto-2); flex: none; }
+.menu-planilha__opcoes svg { color: var(--texto-2); flex: none; }
 .menu-planilha__opcoes strong { display: block; font-size: 14px; font-weight: 500; }
 .menu-planilha__opcoes strong + span { display: block; font-size: 12.5px; color: var(--texto-3); }
 @media (min-width: 641px) { .menu-planilha .botao-icone--alto { width: 40px; height: 40px; } }
