@@ -320,19 +320,20 @@ th, td { padding: 8px 24px 8px 0; border-bottom: 1px solid var(--borda); }
 .calendario__mes::-webkit-calendar-picker-indicator { display: none !important; }
 .calendario__meses { margin-top: 8px; }
 .cal-mes__nome { text-align: center; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
-.cal-grade { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 2px; }
+/* Dias menores e com um respiro entre eles (dias escolhidos lado a lado não ficam colados) */
+.cal-grade { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .cal-semana { text-align: center; font-size: 12px; color: var(--texto-3); padding: 4px 0; }
 .cal-dia {
-  height: 38px; border: 0; background: none; border-radius: 0; cursor: pointer; font-size: 13.5px; color: var(--texto);
+  height: 32px; border: 0; background: none; border-radius: 7px; cursor: pointer; font-size: 13.5px; color: var(--texto);
   font-variant-numeric: tabular-nums; position: relative;
 }
-.cal-dia:hover:not(:disabled) { background: var(--superficie-2); border-radius: 8px; }
+.cal-dia:hover:not(:disabled) { background: var(--superficie-2); }
 .cal-dia:disabled { color: var(--texto-3); opacity: .45; cursor: not-allowed; }
 .cal-dia--hoje { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .cal-dia--dentro { background: var(--destaque-suave); }
-.cal-dia--dentro:hover:not(:disabled) { border-radius: 0; background: var(--destaque-suave); filter: brightness(.96); }
+.cal-dia--dentro:hover:not(:disabled) { background: var(--destaque-suave); filter: brightness(.96); }
 .cal-dia--inicio, .cal-dia--fim, .cal-dia--inicio:hover:not(:disabled), .cal-dia--fim:hover:not(:disabled) {
-  background: var(--destaque); color: var(--destaque-texto); border-radius: 8px; font-weight: 600;
+  background: var(--destaque); color: var(--destaque-texto); font-weight: 600;
 }
 .calendario__rodape { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--borda); }
 @media (max-width: 640px) {
@@ -343,7 +344,7 @@ th, td { padding: 8px 24px 8px 0; border-bottom: 1px solid var(--borda); }
     max-height: calc(100dvh - 64px - 84px - env(safe-area-inset-bottom)); overflow-y: auto;
   }
   body:has(.faixa-teste) .calendario { top: calc(92px + env(safe-area-inset-top)); max-height: calc(100dvh - 92px - 84px - env(safe-area-inset-bottom)); }
-  .cal-dia { height: 42px; }
+  .cal-dia { height: 38px; }
 }
 @media (min-width: 960px) { .segmentos { flex-wrap: wrap; } }
 .segmento {

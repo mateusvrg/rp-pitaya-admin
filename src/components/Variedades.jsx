@@ -131,7 +131,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
           <label className="busca">
             <IconeBusca tamanho={18} />
             <span className="sr-only">Buscar variedade pelo nome</span>
-            <input type="search" placeholder="Buscar variedade pelo nome" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            <input type="search" placeholder="Buscar variedade pelo nome" value={busca} onChange={(e) => { setBusca(e.target.value); if (e.target.value.trim()) setFiltro('todas') }} />
           </label>
           {/* Celular, com a lista rolada: setinha para mostrar de novo os filtros, o período e a planilha */}
           <button type="button" className="filtro-seta" aria-expanded={barra.aberta} onClick={barra.alternar}

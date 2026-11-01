@@ -34,6 +34,11 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
 
   // Abrir uma reserva da lista fecha o formulário de nova reserva / importação.
   useEffect(() => { if (selecionada) setLancando(null) }, [selecionada])
+  // Ao digitar na busca, tira todos os filtros (status, canal e período) para procurar em todas as reservas.
+  const buscar = (texto) => {
+    setBusca(texto)
+    if (texto.trim()) { setFiltro('todas'); setCanal(null); setPeriodo(null); setCalendarioAberto(false) }
+  }
   const abrirLancamento = (qual) => { setMarcadas(new Set()); aoSelecionar(null); setLancando(qual) }
   const lancou = (texto) => { setLancando(null); setRecado(texto); aoRecarregar() }
 
@@ -139,7 +144,7 @@ export function Reservas({ reservas, produtos, filtroInicial, selecionada, aoSel
           <label className="busca">
             <IconeBusca tamanho={18} />
             <span className="sr-only">Buscar por nome ou telefone</span>
-            <input type="search" placeholder="Buscar por nome ou telefone" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            <input type="search" placeholder="Buscar por nome ou telefone" value={busca} onChange={(e) => buscar(e.target.value)} />
           </label>
           {/* Celular, com a lista rolada: setinha para mostrar de novo os filtros, o período e a planilha */}
           <button type="button" className="filtro-seta" aria-expanded={barra.aberta} onClick={barra.alternar}
