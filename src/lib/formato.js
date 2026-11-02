@@ -29,7 +29,7 @@ export function linkWhatsApp(r) {
     ? (r.endereco ? `entrega em: ${r.endereco}` : 'entrega (endereço a combinar)')
     : 'retirada no sítio'
   const texto =
-    `Olá, ${primeiroNome}! Aqui é do sítio Raízes Popolim, da RP Pitaya. ` +
+    `Olá, ${primeiroNome}! Aqui é da RP Pitaya. ` +
     `Recebemos sua reserva: ${resumoItens(r)}, total estimado de ${reais(r.total_estimado)}, ${recebimento}. ` +
     'Podemos combinar o pagamento e o dia?'
   return `https://wa.me/55${r.whatsapp}?text=${encodeURIComponent(texto)}`
