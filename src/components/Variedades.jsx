@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { fotoDe, reais, semAcento } from '../lib/formato'
+import { fotoDe, kg, reais, semAcento } from '../lib/formato'
 import { AcoesVariedades } from './AcoesVariedades'
 import { DetalheVariedade } from './DetalheVariedade'
 import { FiltroCelular } from './FiltroCelular'
@@ -35,7 +35,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
     return () => clearTimeout(t)
   }, [recado])
 
-  // Pitayas reservadas por variedade (sem canceladas) e quantas estão em reservas em aberto.
+  // Quilos reservados por variedade (sem canceladas) e quantas estão em reservas em aberto.
   const numeros = useMemo(() => {
     const n = {}
     reservas.forEach((r) => {
@@ -189,7 +189,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
                         : <span className="linha__foto linha__foto--vazia" aria-hidden="true"><IconeFoto tamanho={18} /></span>}
                       <span className="linha__principal">
                         <span className="linha__nome">{p.nome}</span>
-                        <span className="linha__resumo">{reais(p.preco_unidade)} a unidade · {n} {n === 1 ? 'reservada' : 'reservadas'}</span>
+                        <span className="linha__resumo">{reais(p.preco_unidade)} o kg · {kg(n)} {n === 1 ? 'reservado' : 'reservados'}</span>
                       </span>
                       <span className="linha__lado">
                         <span className={`selo ${p.disponivel ? 'selo--paga' : 'selo--cancelada'}`}>

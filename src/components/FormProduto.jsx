@@ -64,7 +64,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
       </label>
 
       <div className="duas-colunas">
-        <label className="campo-rotulo">Preço por unidade (R$)
+        <label className="campo-rotulo">Preço do quilo (R$/kg)
           <input className="campo" inputMode="decimal" value={f.preco} onChange={mudar('preco')} placeholder="10,00" />
         </label>
         <label className="campo-rotulo">Posição no site

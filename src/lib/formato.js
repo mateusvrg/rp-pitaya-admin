@@ -14,9 +14,13 @@ export const semAcento = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLow
 export const slugDe = (t) =>
   semAcento(t).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
-export const unidades = (r) => r.itens.reduce((s, i) => s + i.quantidade, 0)
+// Tudo é vendido por quilo: quantidade = kg (pode ter vírgula, ex.: 1,5 kg).
+export const numeroKg = (n) => Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+export const kg = (n) => `${numeroKg(n)} kg`
 
-export const resumoItens = (r) => r.itens.map((i) => `${i.quantidade} ${i.nome}`).join(', ')
+export const quilos = (r) => Math.round(r.itens.reduce((s, i) => s + i.quantidade, 0) * 100) / 100
+
+export const resumoItens = (r) => r.itens.map((i) => `${kg(i.quantidade)} ${i.nome}`).join(', ')
 
 // Mensagem pronta para abrir a conversa com o cliente no WhatsApp.
 export function linkWhatsApp(r) {

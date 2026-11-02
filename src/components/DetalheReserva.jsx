@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { STATUS, atualizarReserva, canalDe, nomeCanal } from '../lib/dados'
-import { dataHora, linkWhatsApp, reais, telefone, unidades } from '../lib/formato'
+import { dataHora, kg, linkWhatsApp, quilos, reais, telefone } from '../lib/formato'
 import { IconeFechar, IconeLocal, IconeTelefone, IconeVoltar, IconeWhatsApp } from './Icones'
 
 export function DetalheReserva({ reserva: r, aoFechar, aoAtualizar }) {
@@ -31,7 +31,7 @@ export function DetalheReserva({ reserva: r, aoFechar, aoAtualizar }) {
   }
 
   const mudou = (anotacao.trim() || null) !== (r.observacao ?? null)
-  const qtd = unidades(r)
+  const qtd = quilos(r)
 
   return (
     <div className="detalhe">
@@ -62,13 +62,13 @@ export function DetalheReserva({ reserva: r, aoFechar, aoAtualizar }) {
           <ul className="itens">
             {r.itens.map((i) => (
               <li key={i.produtoId}>
-                <span>{i.quantidade} × {i.nome}</span>
+                <span>{kg(i.quantidade)} × {i.nome} <span className="apoio">({reais(i.preco)} o kg)</span></span>
                 <span className="itens__valor">{reais(i.quantidade * i.preco)}</span>
               </li>
             ))}
           </ul>
           <div className="itens__total">
-            <span>{qtd} {qtd === 1 ? 'unidade' : 'unidades'}</span>
+            <span>{kg(qtd)}</span>
             <strong>{reais(r.total_estimado)}</strong>
           </div>
         </div>

@@ -56,11 +56,12 @@ function mapearColunas(cabecalho, produtos) {
   const mapa = { produtos: {}, precos: {} }
   const porNome = Object.fromEntries(produtos.map((p) => [chave(p.nome), p]))
   cabecalho.forEach((titulo, i) => {
-    const k = chave(titulo)
+    // "Teruya do Vale (kg)", "Qtd Teruya do Vale", "Preço Teruya do Vale (R$/kg)": o "kg" e o "R$" no fim não contam.
+    const k = chave(titulo).replace(/(?: r)?(?: kg| quilos?)$/, '')
     if (!k) return
-    const preco = k.match(/^(?:preco|valor)(?: unidade| unitario| combinado)? (?:de |da |do )?(.+)$/)
+    const preco = k.match(/^(?:preco|valor)(?: unidade| unitario| combinado| do kg| kg| quilo)? (?:de |da |do )?(.+)$/)
     if (preco && porNome[preco[1]]) { mapa.precos[porNome[preco[1]].id] = i; return }
-    const semQtd = k.replace(/^(?:qtd|qtde|quantidade)(?: de)? /, '')
+    const semQtd = k.replace(/^(?:qtd|qtde|quantidade|kg|quilos?)(?: de)? /, '')
     if (porNome[semQtd]) { mapa.produtos[porNome[semQtd].id] = i; return }
     if (/^data/.test(k)) mapa.data ??= i
     else if (/^(nome|cliente)/.test(k)) mapa.nome ??= i
@@ -114,9 +115,10 @@ export function validarLinha(b, produtos) {
 
   const itens = []
   produtos.forEach((p) => {
-    const q = lerNumero(t(b.qtd?.[p.id]))
+    let q = lerNumero(t(b.qtd?.[p.id]))
     if (q == null || q === 0) return
-    if (!Number.isInteger(q) || q < 0 || q > 500) { erro(`qtd-${p.id}`, `quantidade de ${p.nome} inválida`); return }
+    if (Number.isNaN(q) || q < 0.1 || q > 500) { erro(`qtd-${p.id}`, `quilos de ${p.nome} inválidos (de 0,1 a 500)`); return }
+    q = Math.round(q * 100) / 100
     let preco = p.preco_unidade
     const pc = lerNumero(t(b.preco?.[p.id]))
     if (pc != null) {
@@ -131,7 +133,7 @@ export function validarLinha(b, produtos) {
   return {
     linha: b.linha, nome, whatsapp: w.numero, whatsappOk: w.ok, modo, endereco: modo === 'entrega' ? endereco : '', status: status ?? 'nova', canal: canal ?? 'whatsapp',
     data: d.data ? data : null, dataUsada: data, observacao: t(b.observacao), itens,
-    total: itens.reduce((s, i) => s + i.quantidade * i.preco, 0), erros, avisos, camposErrados, bruto: b,
+    total: itens.reduce((s, i) => s + Math.round(i.quantidade * i.preco * 100) / 100, 0), erros, avisos, camposErrados, bruto: b,
   }
 }
 
@@ -204,11 +206,11 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     { titulo: 'WhatsApp', largura: 17, estilo: 'texto' },
     { titulo: 'Recebimento', largura: 14, lista: ['Entrega', 'Retirada'] },
     { titulo: 'Endereço', largura: 34 },
-    ...vars.map((p) => ({ titulo: p.nome, largura: Math.max(12, p.nome.length + 3), estilo: 'numero' })),
+    ...vars.map((p) => ({ titulo: `${p.nome} (kg)`, largura: Math.max(12, p.nome.length + 8), estilo: 'numero' })),
     { titulo: 'Status', largura: 13, lista: STATUS.map((s) => s.nome) },
     { titulo: 'Canal', largura: 12, lista: ['WhatsApp', 'Instagram', 'Site'] },
     { titulo: 'Anotações', largura: 34 },
-    ...vars.map((p) => ({ titulo: `Preço ${p.nome}`, largura: Math.max(14, p.nome.length + 9), estilo: 'dinheiro' })),
+    ...vars.map((p) => ({ titulo: `Preço ${p.nome} (R$/kg)`, largura: Math.max(14, p.nome.length + 16), estilo: 'dinheiro' })),
   ]
   const linhas = [...reservas].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em)).map((r) => {
     const item = (p) => r.itens.find((i) => i.produtoId === p.id)
@@ -230,11 +232,11 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     ['WhatsApp: com DDD, como quiser: (34) 99999-8888 ou 34999998888. Sem DDD, o painel usa 34.'],
     ['Recebimento: Entrega ou Retirada. Em branco = Entrega se tiver endereço, senão Retirada.'],
     ['Endereço: só para entrega. Pode ficar em branco se ainda não combinou.'],
-    [`Colunas das variedades (${vars.map((p) => p.nome).join(', ')}): quantas unidades de cada uma. Deixe em branco o que a pessoa não pegou.`],
+    [`Colunas das variedades (${vars.map((p) => p.nome).join(', ')}): quantos quilos de cada uma (pode ter vírgula, ex.: 1,5). Deixe em branco o que a pessoa não pegou.`],
     ['Status: Nova, Em contato, Paga, Entregue ou Cancelada. Em branco = Nova.'],
     ['Canal: por onde a reserva chegou: WhatsApp, Instagram ou Site. Em branco = WhatsApp.'],
     ['Anotações: qualquer observação (ex.: pagou metade no Pix).'],
-    [`Colunas "Preço ...": só se combinou um preço diferente do site (ex.: Preço ${exemplo} = 8,00). Em branco = preço do site.`],
+    [`Colunas "Preço ...": só se combinou um preço do kg diferente do site (ex.: Preço ${exemplo} = 8,00). Em branco = preço do site.`],
     [''],
     ['Para importar: painel → Reservas → botão de planilha → Importar. O painel mostra tudo antes de gravar.'],
     ['Reservas que já existem no sistema (mesmo nome, WhatsApp, dia, quantidades e anotação) são puladas, então dá para importar a mesma planilha de novo depois de acrescentar linhas.'],

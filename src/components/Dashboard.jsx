@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CANAIS, STATUS, canalDe } from '../lib/dados'
-import { reais, unidades } from '../lib/formato'
+import { kg, numeroKg, quilos, reais } from '../lib/formato'
 import { PERIODOS, lerPeriodo, montarPeriodo, salvarPeriodo } from '../lib/periodos'
 import { GraficoLinha } from './GraficoLinha'
 import { GraficoColunas } from './GraficoColunas'
@@ -141,7 +141,7 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
     })
     const porModo = [['entrega', 'Entrega', '#2563EB'], ['retirada', 'Retirada no sítio', '#D97706']].map(([id, nome, cor]) => {
       const l = val.filter((r) => r.modo === id)
-      return { id, nome, cor, valor: l.length, extra: `${l.reduce((s, r) => s + unidades(r), 0)} pitayas` }
+      return { id, nome, cor, valor: l.length, extra: kg(l.reduce((s, r) => s + quilos(r), 0)) }
     })
 
     const unidadesPor = new Map()
@@ -164,7 +164,7 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
       totalValidas: atualValidas,
       variacaoReservas: variacao(atualValidas, antValidas, periodo.anteriores),
       tendReservas: atualValidas > antValidas ? 'sobe' : atualValidas < antValidas ? 'desce' : null,
-      unidades: validas(doPeriodo).reduce((s, r) => s + unidades(r), 0),
+      quilos: Math.round(validas(doPeriodo).reduce((s, r) => s + quilos(r), 0) * 100) / 100,
       valorReservado: atualValor,
       variacaoValor: variacao(atualValor, antValor, periodo.anteriores),
       tendValor: atualValor > antValor ? 'sobe' : atualValor < antValor ? 'desce' : null,
@@ -226,7 +226,7 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
 
       <section className="metricas" aria-label={`Resumo: ${dados.periodo.nome}`}>
         <Metrica rotulo="Reservas" valor={dados.totalValidas} detalhe={dados.variacaoReservas} tendencia={dados.tendReservas} />
-        <Metrica rotulo="Pitayas reservadas" valor={dados.unidades} detalhe="unidades, sem as canceladas" />
+        <Metrica rotulo="Quilos reservados" valor={numeroKg(dados.quilos)} detalhe="kg, sem as canceladas" />
         <Metrica rotulo="Valor reservado" valor={reais(dados.valorReservado)} detalhe={dados.variacaoValor} tendencia={dados.tendValor} />
         <Metrica rotulo="Valor pago" valor={reais(dados.valorPago)} detalhe={`${dados.qtdPagas} ${dados.qtdPagas === 1 ? 'reserva paga ou entregue' : 'reservas pagas ou entregues'}`} />
         <Metrica rotulo="Ticket médio" valor={reais(dados.ticket)} detalhe={dados.variacaoTicket ?? 'por reserva, sem as canceladas'} tendencia={dados.tendTicket} />
@@ -274,11 +274,11 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
           <BarrasHorizontais linhas={dados.porStatus} aoClicar={(l) => irPara('reservas', l.id)} />
         </section>
         <section className="bloco-grafico">
-          <h2>Pitayas por variedade</h2>
-          <p className="apoio">Unidades no período, sem as canceladas.</p>
+          <h2>Quilos por variedade</h2>
+          <p className="apoio">Quilos no período, sem as canceladas.</p>
           {dados.porVariedade.every((v) => v.valor === 0)
             ? <p className="apoio vazio-grafico">Nenhuma pitaya reservada neste período.</p>
-            : <BarrasHorizontais linhas={dados.porVariedade} formatar={(v) => `${v} un.`} />}
+            : <BarrasHorizontais linhas={dados.porVariedade} formatar={(v) => kg(v)} />}
         </section>
       </div>
     </div>

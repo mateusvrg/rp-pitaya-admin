@@ -188,7 +188,7 @@ export function gerarXlsx(abas) {
       '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" applyFont="1" applyFill="1"/>' +
       '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
       '<xf numFmtId="49" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
-      '<xf numFmtId="1" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
+      '<xf numFmtId="2" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
       '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/>' +
       '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf>' +
       '<xf numFmtId="166" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/></cellXfs>' +

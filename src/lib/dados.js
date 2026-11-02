@@ -22,7 +22,7 @@ const normalizarReserva = (r) => ({
   itens: (r.itens_reserva ?? []).map((i) => ({
     produtoId: i.produto_id,
     nome: i.produtos?.nome ?? 'Variedade removida',
-    quantidade: i.quantidade,
+    quantidade: Number(i.quantidade),
     preco: Number(i.preco_unitario),
   })),
 })

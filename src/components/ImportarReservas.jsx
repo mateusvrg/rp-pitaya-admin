@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { CANAIS, STATUS, lancarReservas, nomeCanal, nomeStatus } from '../lib/dados'
 import { lerPlanilha } from '../lib/planilha'
 import { baixarModelo, interpretar, marcarRepetidas, paraBanco, validarLinha } from '../lib/importar'
-import { reais, semAcento, telefone } from '../lib/formato'
+import { kg, reais, semAcento, telefone } from '../lib/formato'
 import { IconeBaixar, IconeFechar, IconeVoltar, IconeEditar } from './Icones'
 
 const dataCurta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
@@ -57,7 +57,7 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
   const repetidas = itens.filter((r) => r.repetida && !r.erros.length)
   const paraGravar = itens.filter((r) => !r.erros.length && !(pularRepetidas && r.repetida))
   const total = paraGravar.reduce((s, r) => s + r.total, 0)
-  const unidades = paraGravar.reduce((s, r) => s + r.itens.reduce((t, i) => t + i.quantidade, 0), 0)
+  const totalKg = paraGravar.reduce((s, r) => s + r.itens.reduce((t, i) => t + i.quantidade, 0), 0)
 
   const importar = async () => {
     setErro(''); setSalvando(true)
@@ -86,7 +86,7 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
         {!lista && !problemas.length && (
           <ol className="importar__passos">
             <li>
-              <span>Baixe o modelo e preencha uma linha por reserva, com a quantidade de cada variedade.</span>
+              <span>Baixe o modelo e preencha uma linha por reserva, com os quilos de cada variedade.</span>
               <button type="button" className="botao botao--secundario botao--pequeno" onClick={() => baixarModelo(produtos)}>
                 <IconeBaixar tamanho={16} /> Baixar modelo (.xlsx)
               </button>
@@ -140,7 +140,7 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
                         <IconeEditar tamanho={15} className="importar__lapis" />
                       </span>
                       <span className="importar__det">
-                        {[r.whatsappOk ? telefone(r.whatsapp) : r.whatsapp, r.itens.map((i) => `${i.quantidade} ${i.nome}`).join(', '),
+                        {[r.whatsappOk ? telefone(r.whatsapp) : r.whatsapp, r.itens.map((i) => `${kg(i.quantidade)} ${i.nome}`).join(', '),
                           r.modo === 'entrega' ? 'Entrega' : 'Retirada', nomeStatus(r.status), nomeCanal(r.canal), r.data && dataCurta(r.data)].filter(Boolean).join(' · ')}
                       </span>
                       {r.erros.map((e) => <span key={e} className="importar__msg importar__msg--erro">{e}</span>)}
@@ -182,7 +182,7 @@ export function ImportarReservas({ produtos, reservas, aoCancelar, aoImportar })
           )}
         </div>
         {paraGravar.length > 0 && comErro.length === 0 && (
-          <p className="apoio importar__rodape">{unidades} {unidades === 1 ? 'pitaya' : 'pitayas'} · {reais(total)} no total</p>
+          <p className="apoio importar__rodape">{kg(totalKg)} · {reais(total)} no total</p>
         )}
       </div>
     </div>
@@ -253,12 +253,12 @@ function CorrigirLinha({ reserva: r, produtos, aoSalvar, aoCancelar, aoTirar }) 
       </div>
 
       <div className="corrigir__itens">
-        <span className="corrigir__titulo">Quantidade e preço por unidade</span>
+        <span className="corrigir__titulo">Quilos e preço do kg</span>
         {produtos.filter((p) => p.ativo || b.qtd[p.id]).map((p) => (
           <div key={p.id} className="corrigir__item">
             <span>{p.nome}</span>
-            <input className={classe(`qtd-${p.id}`)} value={b.qtd[p.id] ?? ''} onChange={mudarDe('qtd', p.id)} inputMode="numeric"
-              placeholder="0" aria-label={`Quantidade de ${p.nome}`} />
+            <input className={classe(`qtd-${p.id}`)} value={b.qtd[p.id] ?? ''} onChange={mudarDe('qtd', p.id)} inputMode="decimal"
+              placeholder="0 kg" aria-label={`Quilos de ${p.nome}`} />
             <input className={classe(`preco-${p.id}`)} value={b.preco[p.id] ?? ''} onChange={mudarDe('preco', p.id)} inputMode="decimal"
               placeholder={reais(p.preco_unidade).replace('R$ ', '')} aria-label={`Preço de ${p.nome}`} />
           </div>

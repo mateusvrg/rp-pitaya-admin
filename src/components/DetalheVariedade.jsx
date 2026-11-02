@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { alternarProduto } from '../lib/dados'
-import { fotoDe, reais } from '../lib/formato'
+import { fotoDe, kg, reais } from '../lib/formato'
 import { Chave } from './Chave'
 import { IconeFechar, IconeFoto, IconeVoltar } from './Icones'
 
@@ -33,7 +33,7 @@ export function DetalheVariedade({ produto: p, reservadas, emAberto, aoFechar, a
         <button type="button" className="botao-fantasma detalhe__voltar" onClick={aoFechar} aria-label="Voltar para a lista"><IconeVoltar /></button>
         <div className="detalhe__titulo">
           <h2>{p.nome}</h2>
-          <p>{reais(p.preco_unidade)} a unidade</p>
+          <p>{reais(p.preco_unidade)} o kg</p>
         </div>
         <button type="button" className="botao-fantasma detalhe__fechar" onClick={aoFechar} aria-label="Fechar detalhe"><IconeFechar /></button>
       </div>
@@ -55,7 +55,7 @@ export function DetalheVariedade({ produto: p, reservadas, emAberto, aoFechar, a
         <div className="bloco">
           <h3>Reservas</h3>
           <ul className="massa-status">
-            <li><span>Pitayas reservadas (sem as canceladas)</span><strong>{reservadas}</strong></li>
+            <li><span>Quilos reservados (sem as canceladas)</span><strong>{kg(reservadas)}</strong></li>
             <li><span>Em reservas em aberto</span><strong>{emAberto}</strong></li>
           </ul>
         </div>
