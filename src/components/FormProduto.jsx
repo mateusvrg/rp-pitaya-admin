@@ -1,7 +1,20 @@
 import { useEffect, useState } from 'react'
 import { salvarProduto } from '../lib/dados'
 import { enviarFoto } from '../lib/supabase'
-import { fotoDe, slugDe } from '../lib/formato'
+import { fotosDoSite, slugDe } from '../lib/formato'
+import { FotosVariedade } from './FotosVariedade'
+
+// Prévia de uma foto escolhida no computador (antes de enviar).
+function usePrevia(arquivo) {
+  const [url, setUrl] = useState(null)
+  useEffect(() => {
+    if (!arquivo) { setUrl(null); return }
+    const u = URL.createObjectURL(arquivo)
+    setUrl(u)
+    return () => URL.revokeObjectURL(u)
+  }, [arquivo])
+  return url
+}
 
 export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, aoSalvar }) {
   const novo = !produto
@@ -15,18 +28,15 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
     disponivel: produto?.disponivel ?? true,
     ativo: produto?.ativo ?? true,
     imagem_url: produto?.imagem_url ?? '',
+    imagem_url_2: produto?.imagem_url_2 ?? '',
   }))
   const [foto, setFoto] = useState(null)
-  const [previa, setPrevia] = useState(null)
+  const [foto2, setFoto2] = useState(null)
+  const previa = usePrevia(foto)
+  const previa2 = usePrevia(foto2)
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
 
-  useEffect(() => {
-    if (!foto) { setPrevia(null); return }
-    const url = URL.createObjectURL(foto)
-    setPrevia(url)
-    return () => URL.revokeObjectURL(url)
-  }, [foto])
 
   const mudar = (campo) => (e) => setF((x) => ({ ...x, [campo]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
   const slug = produto?.slug ?? slugDe(f.nome)
@@ -42,9 +52,10 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
     setSalvando(true)
     try {
       const imagem_url = foto ? await enviarFoto(foto, slug) : f.imagem_url
+      const imagem_url_2 = foto2 ? await enviarFoto(foto2, `${slug}-2`) : f.imagem_url_2
       const salvo = await salvarProduto({
         id: produto?.id, slug, nome: f.nome.trim(), nome_cartao: f.nome_cartao.trim().replace(/\s*\/\s*/g, ' / '), descricao: f.descricao.trim(), beneficio: f.beneficio.trim(),
-        preco_unidade: preco, ordem: Number(f.ordem) || 0, disponivel: f.disponivel, ativo: f.ativo, imagem_url,
+        preco_unidade: preco, ordem: Number(f.ordem) || 0, disponivel: f.disponivel, ativo: f.ativo, imagem_url, imagem_url_2,
       })
       aoSalvar({ ...salvo, preco_unidade: Number(salvo.preco_unidade) }, novo)
     } catch (err) {
@@ -54,7 +65,12 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
     }
   }
 
-  const fotoAtual = previa || f.imagem_url || (produto ? fotoDe(produto) : null)
+  // Fotos enviadas pelo painel; sem nenhuma, o site usa as que já vêm com ele.
+  const primeira = previa || f.imagem_url
+  const segunda = primeira ? (previa2 || f.imagem_url_2) : null
+  const doSite = !primeira ? fotosDoSite(slug) : []
+  const fotosNoSite = primeira ? [primeira, segunda].filter(Boolean) : doSite
+  const nomesCartao = (f.nome_cartao || f.nome).split('/').map((x) => x.trim()).filter(Boolean)
 
   return (
     <form className="painel-form form" onSubmit={aoEnviar} noValidate>
@@ -86,19 +102,34 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
       </label>
 
       <div className="campo-rotulo">
-        <span>Foto</span>
-        <div className="foto-escolha">
-          {fotoAtual
-            ? <img src={fotoAtual} alt="Prévia da foto" className="produto__foto produto__foto--grande" />
-            : <div className="produto__foto produto__foto--grande produto__foto--vazia" aria-hidden="true">{novo ? 'Sem foto' : 'Foto do site'}</div>}
-          <div>
-            <label className="botao botao--secundario">
-              {fotoAtual ? 'Trocar foto' : 'Escolher foto'}
+        <span>Fotos</span>
+        <div className="fotos-form">
+          <FotosVariedade className="fotos-form__previa" fotos={fotosNoSite} vazia={novo ? 'Sem foto' : 'Sem foto'} alt="Prévia do cartão no site" />
+          <p className="apoio">
+            {fotosNoSite.length === 2
+              ? `No site, as duas aparecem lado a lado: ${nomesCartao[0] ?? 'primeira'} à esquerda${nomesCartao[1] ? `, ${nomesCartao[1]} à direita` : ''}.`
+              : doSite.length ? 'Usando as fotos que já vêm com o site. Enviar uma foto substitui essas.' : 'Uma foto ocupa o cartão inteiro.'}
+          </p>
+          <div className="fotos-form__botoes">
+            <label className="botao botao--secundario botao--pequeno">
+              {primeira ? 'Trocar 1ª foto' : 'Enviar foto'}
               <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only"
                 onChange={(e) => setFoto(e.target.files?.[0] ?? null)} />
             </label>
-            <p className="apoio">JPG, PNG ou WEBP, até 3 MB. Foto quadrada fica melhor.</p>
+            {primeira && (
+              <label className="botao botao--secundario botao--pequeno">
+                {segunda ? 'Trocar 2ª foto' : 'Adicionar 2ª foto'}
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only"
+                  onChange={(e) => setFoto2(e.target.files?.[0] ?? null)} />
+              </label>
+            )}
+            {segunda && (
+              <button type="button" className="link" onClick={() => { setFoto2(null); setF((x) => ({ ...x, imagem_url_2: '' })) }}>
+                Tirar 2ª foto
+              </button>
+            )}
           </div>
+          <p className="apoio">JPG, PNG ou WEBP, até 3 MB. Com duas fotos, o nome de cada variedade (do “Nome no cartão”, separado por /) aparece em cima de cada uma.</p>
         </div>
       </div>
 

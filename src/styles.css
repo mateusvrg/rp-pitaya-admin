@@ -1113,3 +1113,13 @@ html, .reservas__detalhe, .calendario, .menu-planilha__opcoes { scrollbar-width:
   }
   .metrica:nth-child(5) { text-align: center; }
 }
+
+/* Duas fotos lado a lado (variedades juntas num cartão só, como no site) */
+.fotos-duplas { display: flex; gap: 2px; overflow: hidden; background: var(--borda-forte); padding: 0; }
+.fotos-duplas img { flex: 1 1 0; min-width: 0; width: 50%; height: 100%; object-fit: cover; }
+span.linha__foto.fotos-duplas, span.escolha-itens__foto.fotos-duplas, span.variedade-foto.fotos-duplas { display: flex; }
+.fotos-form { display: flex; flex-direction: column; gap: 10px; }
+.fotos-form__previa { width: 100%; max-width: 320px; height: 170px; border-radius: 10px; object-fit: cover; }
+.fotos-form__previa--vazia { display: flex; align-items: center; justify-content: center; background: var(--superficie-2); color: var(--texto-3); font-size: 13px; }
+.fotos-form__botoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.fotos-form__botoes .botao { cursor: pointer; }

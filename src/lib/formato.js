@@ -36,5 +36,15 @@ export function linkWhatsApp(r) {
 }
 
 // Fotos que já vêm no site de reservas (cópia em public/fotos-site). A foto enviada pelo painel tem prioridade.
-const FOTOS_DO_SITE = ['royal-red', 'vietnamese-white', 'teruya-do-vale', 'pitaya-vermelha', 'pitaya-branca']
-export const fotoDe = (p) => p.imagem_url || (FOTOS_DO_SITE.includes(p.slug) ? `/fotos-site/${p.slug}.jpg` : null)
+// A pitaya vermelha junta duas variedades: no site, as duas fotos aparecem lado a lado.
+const FOTOS_DO_SITE = {
+  'royal-red': ['royal-red'],
+  'vietnamese-white': ['vietnamese-white'],
+  'teruya-do-vale': ['teruya-do-vale'],
+  'pitaya-vermelha': ['royal-red', 'teruya-do-vale'],
+  'pitaya-branca': ['vietnamese-white'],
+}
+export const fotosDoSite = (slug) => (FOTOS_DO_SITE[slug] ?? []).map((n) => `/fotos-site/${n}.jpg`)
+// Igual ao site: fotos enviadas pelo painel (1 ou 2) têm prioridade; sem nenhuma, as que vêm com o site.
+export const fotosDe = (p) => (p.imagem_url ? [p.imagem_url, p.imagem_url_2].filter(Boolean) : fotosDoSite(p.slug))
+export const fotoDe = (p) => fotosDe(p)[0] ?? null

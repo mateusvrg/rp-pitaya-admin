@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { alternarProduto } from '../lib/dados'
-import { fotoDe, kg, reais } from '../lib/formato'
+import { fotosDe, kg, reais } from '../lib/formato'
+import { FotosVariedade } from './FotosVariedade'
 import { Chave } from './Chave'
 import { IconeFechar, IconeFoto, IconeVoltar } from './Icones'
 
@@ -39,9 +40,8 @@ export function DetalheVariedade({ produto: p, reservadas, emAberto, aoFechar, a
       </div>
 
       <div className="detalhe__corpo">
-        {fotoDe(p)
-          ? <img className="variedade-foto" src={fotoDe(p)} alt={`Foto da ${p.nome}`} />
-          : <div className="variedade-foto variedade-foto--vazia"><IconeFoto /> Usando a foto que já está no site</div>}
+        <FotosVariedade className="variedade-foto" fotos={fotosDe(p)} alt={`Foto da ${p.nome}`}
+          vazia={<><IconeFoto /> Sem foto</>} />
 
         <div className="bloco">
           <h3>No site</h3>

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { fotoDe, kg, reais, semAcento } from '../lib/formato'
+import { fotosDe, kg, reais, semAcento } from '../lib/formato'
+import { FotosVariedade } from './FotosVariedade'
 import { AcoesVariedades } from './AcoesVariedades'
 import { DetalheVariedade } from './DetalheVariedade'
 import { FiltroCelular } from './FiltroCelular'
 import { useBarraFixa } from './useBarraFixa'
 import { MaisItens, usePaginacao } from './MaisItens'
 import { FormProduto } from './FormProduto'
-import { IconeBusca, IconeSetaBaixo, IconeFoto, IconeMais, IconeVariedades } from './Icones'
+import { IconeBusca, IconeSetaBaixo, IconeMais, IconeVariedades } from './Icones'
 
 const FILTROS = [
   { id: 'todas', nome: 'Todas', passa: () => true },
@@ -184,9 +185,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
                     <button type="button" className={`linha linha--variedade${p.ativo ? '' : ' linha--apagada'}`}
                       aria-current={!selecionando && p.id === aberta ? 'true' : undefined}
                       onClick={() => (selecionando ? alternar(p.id) : abrir(p.id))}>
-                      {fotoDe(p)
-                        ? <img className="linha__foto" src={fotoDe(p)} alt="" />
-                        : <span className="linha__foto linha__foto--vazia" aria-hidden="true"><IconeFoto tamanho={18} /></span>}
+                      <FotosVariedade className="linha__foto" fotos={fotosDe(p)} />
                       <span className="linha__principal">
                         <span className="linha__nome">{p.nome}</span>
                         <span className="linha__resumo">{p.nome_cartao && p.nome_cartao !== p.nome ? `${p.nome_cartao} · ` : ''}{reais(p.preco_unidade)} o kg · {kg(n)} {n === 1 ? 'reservado' : 'reservados'}</span>

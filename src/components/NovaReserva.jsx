@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { STATUS, lancarReservas } from '../lib/dados'
-import { fotoDe, kg, numeroKg, reais } from '../lib/formato'
+import { fotosDe, kg, numeroKg, reais } from '../lib/formato'
+import { FotosVariedade } from './FotosVariedade'
 import { normalizarWhatsApp, lerNumero } from '../lib/importar'
-import { IconeFechar, IconeFoto, IconeVoltar, IconeWhatsApp, IconeInstagram } from './Icones'
+import { IconeFechar, IconeVoltar, IconeWhatsApp, IconeInstagram } from './Icones'
 
 // "2026-10-31T14:05" no fuso de quem está usando (para o campo de data e hora).
 const paraCampo = (d) => {
@@ -125,9 +126,7 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
               const n = kgDe(p.id)
               return (
                 <li key={p.id} className={n > 0 ? 'escolha-itens--com' : undefined}>
-                  {fotoDe(p)
-                    ? <img className="escolha-itens__foto" src={fotoDe(p)} alt="" />
-                    : <span className="escolha-itens__foto escolha-itens__foto--vazia" aria-hidden="true"><IconeFoto tamanho={16} /></span>}
+                  <FotosVariedade className="escolha-itens__foto" fotos={fotosDe(p)} tamanhoIcone={16} />
                   <span className="escolha-itens__nome">
                     {p.nome}
                     {!p.disponivel && <span className="produto__tag">Esgotada</span>}

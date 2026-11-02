@@ -54,6 +54,7 @@ export async function salvarProduto(produto) {
     descricao: produto.descricao,
     beneficio: produto.beneficio,
     imagem_url: produto.imagem_url || null,
+    imagem_url_2: produto.imagem_url ? produto.imagem_url_2 || null : null,
     preco_unidade: produto.preco_unidade,
     disponivel: produto.disponivel,
     ativo: produto.ativo,
