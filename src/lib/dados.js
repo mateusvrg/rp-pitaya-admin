@@ -50,6 +50,7 @@ export async function salvarProduto(produto) {
   const campos = {
     slug: produto.slug,
     nome: produto.nome,
+    nome_cartao: produto.nome_cartao || null,
     descricao: produto.descricao,
     beneficio: produto.beneficio,
     imagem_url: produto.imagem_url || null,

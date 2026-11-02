@@ -169,7 +169,7 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
         <fieldset className="bloco">
           <legend className="bloco__legenda">Recebimento</legend>
           <div className="segmentos segmentos--largo" role="group" aria-label="Recebimento">
-            {[['retirada', 'Retirada no sítio'], ['entrega', 'Entrega']].map(([id, nome]) => (
+            {[['retirada', 'Retirada'], ['entrega', 'Entrega']].map(([id, nome]) => (
               <button key={id} type="button" className="segmento" aria-pressed={f.modo === id} onClick={() => setF((x) => ({ ...x, modo: id }))}>{nome}</button>
             ))}
           </div>

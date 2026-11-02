@@ -33,7 +33,7 @@ export function DetalheVariedade({ produto: p, reservadas, emAberto, aoFechar, a
         <button type="button" className="botao-fantasma detalhe__voltar" onClick={aoFechar} aria-label="Voltar para a lista"><IconeVoltar /></button>
         <div className="detalhe__titulo">
           <h2>{p.nome}</h2>
-          <p>{reais(p.preco_unidade)} o kg</p>
+          <p>{p.nome_cartao && p.nome_cartao !== p.nome ? `No site: ${p.nome_cartao} · ` : ''}{reais(p.preco_unidade)} o kg</p>
         </div>
         <button type="button" className="botao-fantasma detalhe__fechar" onClick={aoFechar} aria-label="Fechar detalhe"><IconeFechar /></button>
       </div>
@@ -56,7 +56,7 @@ export function DetalheVariedade({ produto: p, reservadas, emAberto, aoFechar, a
           <h3>Reservas</h3>
           <ul className="massa-status">
             <li><span>Quilos reservados (sem as canceladas)</span><strong>{kg(reservadas)}</strong></li>
-            <li><span>Em reservas em aberto</span><strong>{emAberto}</strong></li>
+            <li><span>Em reservas em aberto</span><strong>{kg(emAberto)}</strong></li>
           </ul>
         </div>
 

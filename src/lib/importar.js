@@ -54,7 +54,10 @@ const STATUS_POR_NOME = Object.fromEntries(STATUS.flatMap((s) => [[chave(s.nome)
 // Cabeçalho → o que cada coluna é. Variedades pelo nome (com ou sem "Qtd"), preço por "Preço <variedade>".
 function mapearColunas(cabecalho, produtos) {
   const mapa = { produtos: {}, precos: {} }
-  const porNome = Object.fromEntries(produtos.map((p) => [chave(p.nome), p]))
+  // Pelo nome do produto e também pelos nomes do cartão (ex.: coluna "Teruya do Vale" vai para "Pitaya vermelha").
+  const porNome = {}
+  produtos.forEach((p) => (p.nome_cartao ?? '').split('/').forEach((n) => { if (chave(n)) porNome[chave(n)] ??= p }))
+  produtos.forEach((p) => { porNome[chave(p.nome)] = p })
   cabecalho.forEach((titulo, i) => {
     // "Teruya do Vale (kg)", "Qtd Teruya do Vale", "Preço Teruya do Vale (R$/kg)": o "kg" e o "R$" no fim não contam.
     const k = chave(titulo).replace(/(?: r)?(?: kg| quilos?)$/, '')

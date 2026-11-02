@@ -189,7 +189,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
                         : <span className="linha__foto linha__foto--vazia" aria-hidden="true"><IconeFoto tamanho={18} /></span>}
                       <span className="linha__principal">
                         <span className="linha__nome">{p.nome}</span>
-                        <span className="linha__resumo">{reais(p.preco_unidade)} o kg · {kg(n)} {n === 1 ? 'reservado' : 'reservados'}</span>
+                        <span className="linha__resumo">{p.nome_cartao && p.nome_cartao !== p.nome ? `${p.nome_cartao} · ` : ''}{reais(p.preco_unidade)} o kg · {kg(n)} {n === 1 ? 'reservado' : 'reservados'}</span>
                       </span>
                       <span className="linha__lado">
                         <span className={`selo ${p.disponivel ? 'selo--paga' : 'selo--cancelada'}`}>

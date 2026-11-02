@@ -77,7 +77,7 @@ export function DetalheReserva({ reserva: r, aoFechar, aoAtualizar }) {
           <h3>Contato e recebimento</h3>
           <p className="info"><IconeTelefone tamanho={18} /> {telefone(r.whatsapp)}</p>
           <p className="info"><IconeLocal tamanho={18} />
-            {r.modo === 'entrega' ? <span>{r.endereco ? `Entrega em: ${r.endereco}` : 'Entrega (endereço a combinar)'}</span> : <span>Retirada no sítio</span>}
+            {r.modo === 'entrega' ? <span>{r.endereco ? `Entrega em: ${r.endereco}` : 'Entrega (endereço a combinar)'}</span> : <span>Retirada em nosso endereço</span>}
           </p>
           <a className="botao botao--whatsapp" href={linkWhatsApp(r)} target="_blank" rel="noopener noreferrer">
             <IconeWhatsApp tamanho={18} /> Chamar no WhatsApp

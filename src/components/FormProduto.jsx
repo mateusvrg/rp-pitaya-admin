@@ -7,6 +7,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
   const novo = !produto
   const [f, setF] = useState(() => ({
     nome: produto?.nome ?? '',
+    nome_cartao: produto?.nome_cartao ?? '',
     descricao: produto?.descricao ?? '',
     beneficio: produto?.beneficio ?? '',
     preco: produto ? String(produto.preco_unidade).replace('.', ',') : '',
@@ -42,7 +43,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
     try {
       const imagem_url = foto ? await enviarFoto(foto, slug) : f.imagem_url
       const salvo = await salvarProduto({
-        id: produto?.id, slug, nome: f.nome.trim(), descricao: f.descricao.trim(), beneficio: f.beneficio.trim(),
+        id: produto?.id, slug, nome: f.nome.trim(), nome_cartao: f.nome_cartao.trim().replace(/\s*\/\s*/g, ' / '), descricao: f.descricao.trim(), beneficio: f.beneficio.trim(),
         preco_unidade: preco, ordem: Number(f.ordem) || 0, disponivel: f.disponivel, ativo: f.ativo, imagem_url,
       })
       aoSalvar({ ...salvo, preco_unidade: Number(salvo.preco_unidade) }, novo)
@@ -61,6 +62,11 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
 
       <label className="campo-rotulo">Nome
         <input className="campo" value={f.nome} onChange={mudar('nome')} maxLength={60} placeholder="Ex.: Pitaya Amarela" />
+        <span className="apoio">É o que o cliente escolhe na reserva e o que aparece nas reservas do painel.</span>
+      </label>
+      <label className="campo-rotulo"><span>Nome no cartão do site <span className="apoio">(opcional)</span></span>
+        <input className="campo" value={f.nome_cartao} onChange={mudar('nome_cartao')} maxLength={80} placeholder="Ex.: Royal Red / Teruya do Vale" />
+        <span className="apoio">Para juntar variedades parecidas num cartão só, separe os nomes com /. Em branco, o cartão usa o nome.</span>
       </label>
 
       <div className="duas-colunas">

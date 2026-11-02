@@ -27,7 +27,7 @@ export function linkWhatsApp(r) {
   const primeiroNome = r.nome.split(' ')[0]
   const recebimento = r.modo === 'entrega'
     ? (r.endereco ? `entrega em: ${r.endereco}` : 'entrega (endereço a combinar)')
-    : 'retirada no sítio'
+    : 'retirada em nosso endereço'
   const texto =
     `Olá, ${primeiroNome}! Aqui é da RP Pitaya. ` +
     `Recebemos sua reserva: ${resumoItens(r)}, total estimado de ${reais(r.total_estimado)}, ${recebimento}. ` +
@@ -36,5 +36,5 @@ export function linkWhatsApp(r) {
 }
 
 // Fotos que já vêm no site de reservas (cópia em public/fotos-site). A foto enviada pelo painel tem prioridade.
-const FOTOS_DO_SITE = ['royal-red', 'vietnamese-white', 'teruya-do-vale']
+const FOTOS_DO_SITE = ['royal-red', 'vietnamese-white', 'teruya-do-vale', 'pitaya-vermelha', 'pitaya-branca']
 export const fotoDe = (p) => p.imagem_url || (FOTOS_DO_SITE.includes(p.slug) ? `/fotos-site/${p.slug}.jpg` : null)
