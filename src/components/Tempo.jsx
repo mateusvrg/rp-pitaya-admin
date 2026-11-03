@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { lerTempo } from '../lib/tempo'
-import { IconeSetaBaixo } from './Icones'
+import { IconeFechar, IconeSetaBaixo, IconeTermometro } from './Icones'
 
 // Ícones do céu (desenhados aqui, coloridos).
 function IconeCeu({ ceu, tamanho = 40 }) {
@@ -151,5 +151,46 @@ export function TempoResumo({ tempo }) {
       </button>
       {aberto && <div className="tempo-resumo__caixa"><QuadroTempo tempo={tempo} /></div>}
     </div>
+  )
+}
+
+// Celular: termômetro na barra de cima (ao lado do tema). Toca e o quadro do tempo sobe de baixo.
+export function TempoCelular({ tempo }) {
+  const [aberto, setAberto] = useState(false)
+  const [saindo, setSaindo] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const d = ref.current
+    if (aberto && d && !d.open) d.showModal()
+  }, [aberto])
+
+  // Fecha com animação: desce, e só então fecha a janela.
+  const fechar = () => {
+    if (!ref.current?.open || saindo) return
+    setSaindo(true)
+    setTimeout(() => { ref.current?.close(); setSaindo(false); setAberto(false) }, 240)
+  }
+
+  if (!tempo) return null
+  return (
+    <>
+      <button type="button" className="botao-fantasma tempo-celular__botao" onClick={() => setAberto(true)}
+        aria-haspopup="dialog" aria-label={`Tempo no sítio: ${graus(tempo.agora.temp)}, ${tempo.agora.ceu.nome}`} title="Tempo no sítio">
+        <IconeTermometro />
+        {tempo.alertas.length > 0 && <span className="tempo-resumo__ponto" aria-hidden="true" />}
+      </button>
+      <dialog ref={ref} className={`tempo-folha${saindo ? ' tempo-folha--saindo' : ''}`} aria-label="Tempo no sítio"
+        onCancel={(e) => { e.preventDefault(); fechar() }} onClose={() => { setAberto(false); setSaindo(false) }}
+        onClick={(e) => { if (e.target === ref.current) fechar() }}>
+        {aberto && (
+          <div className="tempo-folha__caixa">
+            <span className="tempo-folha__alca" aria-hidden="true" />
+            <button type="button" className="botao-fantasma tempo-folha__fechar" onClick={fechar} aria-label="Fechar"><IconeFechar /></button>
+            <QuadroTempo tempo={tempo} />
+          </div>
+        )}
+      </dialog>
+    </>
   )
 }

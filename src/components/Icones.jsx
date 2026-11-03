@@ -31,5 +31,6 @@ export const IconeInstagram = (p) => <Svg {...p}><rect x="3.5" y="3.5" width="17
 export const IconePlanilha = (p) => <Svg {...p}><path d="M8.5 7.5V5.5a2 2 0 0 1 2-2H16l3.5 3.5v9.5a2 2 0 0 1-2 2h-2" /><rect x="4.5" y="7.5" width="11" height="13" rx="2" /><path d="M7.5 12h5M7.5 15.5h5" /></Svg>
 export const IconeEditar = (p) => <Svg {...p}><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></Svg>
 export const IconeSite = (p) => <Svg {...p}><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.4 2.3 3.6 5.1 3.6 8.5s-1.2 6.2-3.6 8.5c-2.4-2.3-3.6-5.1-3.6-8.5s1.2-6.2 3.6-8.5z" /></Svg>
+export const IconeTermometro = (p) => <Svg {...p}><path d="M14 14.76V4.5a2 2 0 0 0-4 0v10.26a4 4 0 1 0 4 0z" /><path d="M12 10v7" /></Svg>
 export const IconeOlho = (p) => <Svg {...p}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></Svg>
 export const IconeOlhoFechado = (p) => <Svg {...p}><path d="M10.6 5.6A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.5 7.1C3.9 8.9 2.5 12 2.5 12S6 18.5 12 18.5c1.8 0 3.3-.6 4.6-1.4" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /><path d="M3.5 3.5l17 17" /></Svg>

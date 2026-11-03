@@ -7,7 +7,7 @@ import { Dashboard } from './Dashboard'
 import { Reservas } from './Reservas'
 import { Variedades } from './Variedades'
 import { useDeslizarAbas } from './useDeslizarAbas'
-import { TempoMargem, TempoResumo, useTempo } from './Tempo'
+import { TempoCelular, TempoMargem, TempoResumo, useTempo } from './Tempo'
 import { IconeAtualizar, IconeAuto, IconeDashboard, IconeLua, IconeReservas, IconeSair, IconeSol, IconeVariedades } from './Icones'
 
 const IDS_ABAS = ['dashboard', 'reservas', 'variedades']
@@ -126,6 +126,7 @@ export function Painel() {
       <header className="barra-celular">
         <a href="#/dashboard" className="marca"><img src={logo} alt="" width="26" height="26" /><span>{tituloAba}</span></a>
         <div className="barra-celular__acoes">
+          <TempoCelular tempo={tempo} />
           <BotaoTema />
           <button type="button" className="botao-fantasma" onClick={sair} aria-label="Sair"><IconeSair /></button>
         </div>
