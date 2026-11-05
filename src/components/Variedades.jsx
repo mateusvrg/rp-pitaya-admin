@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { fotosDe, kg, reais, semAcento } from '../lib/formato'
+import { fotosDe, porUnidade, qtd, reais, semAcento, unidadeDe } from '../lib/formato'
 import { FotosVariedade } from './FotosVariedade'
 import { AcoesVariedades } from './AcoesVariedades'
 import { DetalheVariedade } from './DetalheVariedade'
@@ -36,7 +36,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
     return () => clearTimeout(t)
   }, [recado])
 
-  // Quilos reservados por variedade (sem canceladas) e quantas estão em reservas em aberto.
+  // Quanto foi reservado de cada variedade (sem canceladas), na unidade dela, e quanto está em reservas em aberto.
   const numeros = useMemo(() => {
     const n = {}
     reservas.forEach((r) => {
@@ -44,12 +44,13 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
       const aberta = ['nova', 'em_contato', 'paga'].includes(r.status)
       r.itens.forEach((i) => {
         n[i.produtoId] ??= { reservadas: 0, emAberto: 0 }
+        if (i.unidade !== unidadeDe(produtos.find((p) => p.id === i.produtoId))) return // reservas antigas noutra unidade
         n[i.produtoId].reservadas += i.quantidade
         if (aberta) n[i.produtoId].emAberto += i.quantidade
       })
     })
     return n
-  }, [reservas])
+  }, [reservas, produtos])
 
   const contagem = Object.fromEntries(FILTROS.map((f) => [f.id, produtos.filter(f.passa).length]))
   const visiveis = useMemo(() => {
@@ -188,7 +189,7 @@ export function Variedades({ produtos, reservas, aoSalvar }) {
                       <FotosVariedade className="linha__foto" fotos={fotosDe(p)} />
                       <span className="linha__principal">
                         <span className="linha__nome">{p.nome}</span>
-                        <span className="linha__resumo">{p.nome_cartao && p.nome_cartao !== p.nome ? `${p.nome_cartao} · ` : ''}{reais(p.preco_unidade)} o kg · {kg(n)} {n === 1 ? 'reservado' : 'reservados'}</span>
+                        <span className="linha__resumo">{p.nome_cartao && p.nome_cartao !== p.nome ? `${p.nome_cartao} · ` : ''}{reais(p.preco_unidade)} {porUnidade(unidadeDe(p))} · {qtd(n, unidadeDe(p))} {n === 1 ? 'reservado' : 'reservados'}</span>
                       </span>
                       <span className="linha__lado">
                         <span className={`selo ${p.disponivel ? 'selo--paga' : 'selo--cancelada'}`}>

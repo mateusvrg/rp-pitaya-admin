@@ -23,6 +23,7 @@ const normalizarReserva = (r) => ({
     produtoId: i.produto_id,
     nome: i.produtos?.nome ?? 'Variedade removida',
     quantidade: Number(i.quantidade),
+    unidade: i.unidade || 'kg',
     preco: Number(i.preco_unitario),
   })),
 })
@@ -30,7 +31,7 @@ const normalizarReserva = (r) => ({
 export async function listarReservas() {
   const linhas = await rest(
     'reservas?select=id,nome,whatsapp,modo,endereco,status,total_estimado,observacao,origem,canal,criado_em,atualizado_em,' +
-      'itens_reserva(produto_id,quantidade,preco_unitario,produtos(nome))&order=criado_em.desc&limit=2000',
+      'itens_reserva(produto_id,quantidade,preco_unitario,unidade,produtos(nome))&order=criado_em.desc&limit=2000',
   )
   return linhas.map(normalizarReserva)
 }
@@ -51,6 +52,9 @@ export async function salvarProduto(produto) {
     slug: produto.slug,
     nome: produto.nome,
     nome_cartao: produto.nome_cartao || null,
+    venda: produto.venda === 'unidade' ? 'unidade' : 'kg',
+    unidade_nome: produto.venda === 'unidade' ? (produto.unidade_nome || '').trim().toLowerCase() || null : null,
+    secao: produto.secao === 'mudas' ? 'mudas' : 'frutas',
     descricao: produto.descricao,
     beneficio: produto.beneficio,
     imagem_url: produto.imagem_url || null,

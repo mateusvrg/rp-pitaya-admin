@@ -1,7 +1,9 @@
 // Transforma as linhas da planilha em reservas, conferindo cada uma antes de mandar para o banco.
 import { STATUS, canalDe, nomeCanal } from './dados'
 import { gerarXlsx, baixarArquivo } from './planilha'
-import { semAcento, telefone } from './formato'
+import { pluralUnidade, semAcento, telefone, unidadeDe } from './formato'
+// Coluna da quantidade: "kg" ou o plural da unidade ("mudas").
+const rotuloQtd = (p) => (unidadeDe(p) === 'kg' ? 'kg' : pluralUnidade(unidadeDe(p)))
 
 const chave = (t) => semAcento(String(t ?? '')).replace(/[^a-z0-9]+/g, ' ').trim()
 
@@ -59,8 +61,9 @@ function mapearColunas(cabecalho, produtos) {
   produtos.forEach((p) => (p.nome_cartao ?? '').split('/').forEach((n) => { if (chave(n)) porNome[chave(n)] ??= p }))
   produtos.forEach((p) => { porNome[chave(p.nome)] = p })
   cabecalho.forEach((titulo, i) => {
-    // "Teruya do Vale (kg)", "Qtd Teruya do Vale", "Preço Teruya do Vale (R$/kg)": o "kg" e o "R$" no fim não contam.
-    const k = chave(titulo).replace(/(?: r)?(?: kg| quilos?)$/, '')
+    // "Teruya do Vale (kg)", "Muda (mudas)", "Qtd Teruya do Vale", "Preço Teruya do Vale (R$/kg)":
+    // o que vem entre parênteses no fim, e o "kg"/"R$" no fim, não contam.
+    const k = chave(String(titulo ?? '').replace(/\s*\([^)]*\)\s*$/, '')).replace(/(?: r)?(?: kg| quilos?)$/, '')
     if (!k) return
     const preco = k.match(/^(?:preco|valor)(?: unidade| unitario| combinado| do kg| kg| quilo)? (?:de |da |do )?(.+)$/)
     if (preco && porNome[preco[1]]) { mapa.precos[porNome[preco[1]].id] = i; return }
@@ -120,7 +123,9 @@ export function validarLinha(b, produtos) {
   produtos.forEach((p) => {
     let q = lerNumero(t(b.qtd?.[p.id]))
     if (q == null || q === 0) return
-    if (Number.isNaN(q) || q < 0.1 || q > 500) { erro(`qtd-${p.id}`, `quilos de ${p.nome} inválidos (de 0,1 a 500)`); return }
+    const u = unidadeDe(p)
+    if (u === 'kg' && (Number.isNaN(q) || q < 0.1 || q > 500)) { erro(`qtd-${p.id}`, `quilos de ${p.nome} inválidos (de 0,1 a 500)`); return }
+    if (u !== 'kg' && (Number.isNaN(q) || !Number.isInteger(q) || q < 1 || q > 500)) { erro(`qtd-${p.id}`, `${p.nome}: use um número inteiro de ${pluralUnidade(u)} (de 1 a 500)`); return }
     q = Math.round(q * 100) / 100
     let preco = p.preco_unidade
     const pc = lerNumero(t(b.preco?.[p.id]))
@@ -129,7 +134,7 @@ export function validarLinha(b, produtos) {
       else preco = pc
     }
     if (!p.disponivel) avisos.push(`${p.nome} está esgotada no site`)
-    itens.push({ produto_id: p.id, nome: p.nome, quantidade: q, preco })
+    itens.push({ produto_id: p.id, nome: p.nome, quantidade: q, unidade: u, preco })
   })
   if (itens.length === 0 && !erros.some((e) => e.startsWith('quantidade'))) erro('qtd', 'nenhuma quantidade preenchida')
 
@@ -209,11 +214,11 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     { titulo: 'WhatsApp', largura: 17, estilo: 'texto' },
     { titulo: 'Recebimento', largura: 14, lista: ['Entrega', 'Retirada'] },
     { titulo: 'Endereço', largura: 34 },
-    ...vars.map((p) => ({ titulo: `${p.nome} (kg)`, largura: Math.max(12, p.nome.length + 8), estilo: 'numero' })),
+    ...vars.map((p) => ({ titulo: `${p.nome} (${rotuloQtd(p)})`, largura: Math.max(12, p.nome.length + 9), estilo: 'numero' })),
     { titulo: 'Status', largura: 13, lista: STATUS.map((s) => s.nome) },
     { titulo: 'Canal', largura: 12, lista: ['WhatsApp', 'Instagram', 'Site'] },
     { titulo: 'Anotações', largura: 34 },
-    ...vars.map((p) => ({ titulo: `Preço ${p.nome} (R$/kg)`, largura: Math.max(14, p.nome.length + 16), estilo: 'dinheiro' })),
+    ...vars.map((p) => ({ titulo: `Preço ${p.nome} (R$/${unidadeDe(p)})`, largura: Math.max(14, p.nome.length + 16), estilo: 'dinheiro' })),
   ]
   const linhas = [...reservas].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em)).map((r) => {
     const item = (p) => r.itens.find((i) => i.produtoId === p.id)
@@ -235,11 +240,11 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     ['WhatsApp: com DDD, como quiser: (34) 99999-8888 ou 34999998888. Sem DDD, o painel usa 34.'],
     ['Recebimento: Entrega ou Retirada. Em branco = Entrega se tiver endereço, senão Retirada.'],
     ['Endereço: só para entrega. Pode ficar em branco se ainda não combinou.'],
-    [`Colunas das variedades (${vars.map((p) => p.nome).join(', ')}): quantos quilos de cada uma (pode ter vírgula, ex.: 1,5). Deixe em branco o que a pessoa não pegou.`],
+    [`Colunas das variedades (${vars.map((p) => p.nome).join(', ')}): a quantidade de cada uma. Em kg pode ter vírgula (ex.: 1,5); por unidade (ex.: mudas), só número inteiro. Deixe em branco o que a pessoa não pegou.`],
     ['Status: Nova, Em contato, Paga, Entregue ou Cancelada. Em branco = Nova.'],
     ['Canal: por onde a reserva chegou: WhatsApp, Instagram ou Site. Em branco = WhatsApp.'],
     ['Anotações: qualquer observação (ex.: pagou metade no Pix).'],
-    [`Colunas "Preço ...": só se combinou um preço do kg diferente do site (ex.: Preço ${exemplo} = 8,00). Em branco = preço do site.`],
+    [`Colunas "Preço ...": só se combinou um preço (do kg ou da unidade) diferente do site (ex.: Preço ${exemplo} = 8,00). Em branco = preço do site.`],
     [''],
     ['Para importar: painel → Reservas → botão de planilha → Importar. O painel mostra tudo antes de gravar.'],
     ['Reservas que já existem no sistema (mesmo nome, WhatsApp, dia, quantidades e anotação) são puladas, então dá para importar a mesma planilha de novo depois de acrescentar linhas.'],

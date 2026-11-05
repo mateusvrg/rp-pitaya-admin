@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { alternarProduto } from '../lib/dados'
-import { fotosDe, kg, reais } from '../lib/formato'
+import { fotosDe, porUnidade, qtd, reais, unidadeDe } from '../lib/formato'
 import { FotosVariedade } from './FotosVariedade'
 import { Chave } from './Chave'
 import { IconeFechar, IconeFoto, IconeVoltar } from './Icones'
@@ -34,7 +34,7 @@ export function DetalheVariedade({ produto: p, reservadas, emAberto, aoFechar, a
         <button type="button" className="botao-fantasma detalhe__voltar" onClick={aoFechar} aria-label="Voltar para a lista"><IconeVoltar /></button>
         <div className="detalhe__titulo">
           <h2>{p.nome}</h2>
-          <p>{p.nome_cartao && p.nome_cartao !== p.nome ? `No site: ${p.nome_cartao} · ` : ''}{reais(p.preco_unidade)} o kg</p>
+          <p>{p.nome_cartao && p.nome_cartao !== p.nome ? `No site: ${p.nome_cartao} · ` : ''}{reais(p.preco_unidade)} {porUnidade(unidadeDe(p))}{p.secao === 'mudas' ? ' · seção Mudas' : ''}</p>
         </div>
         <button type="button" className="botao-fantasma detalhe__fechar" onClick={aoFechar} aria-label="Fechar detalhe"><IconeFechar /></button>
       </div>
@@ -55,8 +55,8 @@ export function DetalheVariedade({ produto: p, reservadas, emAberto, aoFechar, a
         <div className="bloco">
           <h3>Reservas</h3>
           <ul className="massa-status">
-            <li><span>Quilos reservados (sem as canceladas)</span><strong>{kg(reservadas)}</strong></li>
-            <li><span>Em reservas em aberto</span><strong>{kg(emAberto)}</strong></li>
+            <li><span>{unidadeDe(p) === 'kg' ? 'Quilos reservados' : 'Reservado'} (sem as canceladas)</span><strong>{qtd(reservadas, unidadeDe(p))}</strong></li>
+            <li><span>Em reservas em aberto</span><strong>{qtd(emAberto, unidadeDe(p))}</strong></li>
           </ul>
         </div>
 

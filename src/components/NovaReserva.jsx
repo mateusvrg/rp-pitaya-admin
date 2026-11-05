@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { STATUS, lancarReservas } from '../lib/dados'
-import { fotosDe, kg, numeroKg, reais } from '../lib/formato'
+import { fotosDe, numeroKg, pluralUnidade, porUnidade, reais, resumoQtd, unidadeDe } from '../lib/formato'
 import { FotosVariedade } from './FotosVariedade'
 import { normalizarWhatsApp, lerNumero } from '../lib/importar'
 import { IconeFechar, IconeVoltar, IconeWhatsApp, IconeInstagram } from './Icones'
@@ -40,22 +40,27 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
   }, [aoCancelar])
 
   const mudar = (campo) => (e) => setF((x) => ({ ...x, [campo]: e.target.value }))
-  // Quilos: o que está escrito no campo (texto, aceita vírgula). Os botões andam de meio em meio quilo.
+  // Quantidade: o que está escrito no campo (texto). Por quilo aceita vírgula e os botões andam de meio em meio quilo;
+  // por unidade (ex.: muda) só número inteiro, de 1 em 1.
   const kgDe = (id) => { const n = lerNumero(qtd[id]); return n == null || Number.isNaN(n) ? 0 : n }
-  const somar = (id, delta) => setQtd((q) => {
-    const atual = kgDe(id)
-    const base = delta > 0 ? Math.floor(atual / 0.5 + 1e-9) * 0.5 : Math.ceil(atual / 0.5 - 1e-9) * 0.5
-    return { ...q, [id]: numeroKg(Math.max(0, Math.min(500, Math.round((base + delta) * 100) / 100))) }
+  const somar = (p, delta) => setQtd((q) => {
+    const passo = Math.abs(delta)
+    const atual = kgDe(p.id)
+    const base = delta > 0 ? Math.floor(atual / passo + 1e-9) * passo : Math.ceil(atual / passo - 1e-9) * passo
+    return { ...q, [p.id]: numeroKg(Math.max(0, Math.min(500, Math.round((base + delta) * 100) / 100))) }
   })
+  const limpar = (p, texto) => (p.venda === 'unidade'
+    ? texto.split(/[.,]/)[0].replace(/\D/g, '').slice(0, 3)
+    : texto.replace(/[^\d.,]/g, '').replace(/([.,].*)[.,]/, '$1').slice(0, 6))
 
   const itens = vars
     .filter((p) => kgDe(p.id) > 0)
     .map((p) => {
       const preco = lerNumero(precos[p.id])
-      return { produto: p, quantidade: Math.round(kgDe(p.id) * 100) / 100, preco: preco == null || Number.isNaN(preco) ? NaN : preco }
+      return { produto: p, unidade: unidadeDe(p), quantidade: Math.round(kgDe(p.id) * 100) / 100, preco: preco == null || Number.isNaN(preco) ? NaN : preco }
     })
   const total = itens.reduce((s, i) => s + Math.round(i.quantidade * (Number.isNaN(i.preco) ? 0 : i.preco) * 100) / 100, 0)
-  const totalKg = Math.round(itens.reduce((s, i) => s + i.quantidade, 0) * 100) / 100
+  const resumo = resumoQtd(itens)
   const esgotadas = itens.filter((i) => !i.produto.disponivel).map((i) => i.produto.nome)
 
   const aoEnviar = async (e) => {
@@ -66,8 +71,10 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
     if (f.nome.trim().length < 3) return setErro('Escreva o nome do cliente.')
     if (!w.ok) return setErro('Escreva o WhatsApp com DDD, por exemplo (34) 99999-8888.')
     if (Number.isNaN(data.getTime()) || data > new Date(Date.now() + 86400000)) return setErro('A data precisa ser de hoje ou de antes.')
-    if (itens.length === 0) return setErro('Coloque os quilos de pelo menos uma variedade.')
-    if (itens.some((i) => i.quantidade < 0.1 || i.quantidade > 500)) return setErro('Cada variedade aceita de 0,1 a 500 kg.')
+    if (itens.length === 0) return setErro('Coloque a quantidade de pelo menos uma variedade.')
+    if (itens.some((i) => i.quantidade < 0.1 || i.quantidade > 500)) return setErro('Cada variedade aceita de 0,1 a 500 kg (ou de 1 a 500 unidades).')
+    const quebrado = itens.find((i) => i.unidade !== 'kg' && !Number.isInteger(i.quantidade))
+    if (quebrado) return setErro(`${quebrado.produto.nome} é vendido por unidade: use um número inteiro.`)
     if (itens.some((i) => Number.isNaN(i.preco) || i.preco < 0)) return setErro('Algum preço está inválido. Use por exemplo 10,00.')
 
     setSalvando(true)
@@ -120,10 +127,12 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
         </div>
 
         <fieldset className="bloco">
-          <legend className="bloco__legenda">Pitayas (em kg)</legend>
+          <legend className="bloco__legenda">Pitayas e mudas</legend>
           <ul className="escolha-itens">
             {vars.map((p) => {
               const n = kgDe(p.id)
+              const u = unidadeDe(p)
+              const porKg = u === 'kg'
               return (
                 <li key={p.id} className={n > 0 ? 'escolha-itens--com' : undefined}>
                   <FotosVariedade className="escolha-itens__foto" fotos={fotosDe(p)} tamanhoIcone={16} />
@@ -132,17 +141,19 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
                     {!p.disponivel && <span className="produto__tag">Esgotada</span>}
                   </span>
                   <span className="contador-qtd">
-                    <button type="button" onClick={() => somar(p.id, -0.5)} disabled={n === 0} aria-label={`Tirar meio quilo de ${p.nome}`}>−</button>
-                    <input inputMode="decimal" value={qtd[p.id] ?? '0'} aria-label={`Quilos de ${p.nome}`}
+                    <button type="button" onClick={() => somar(p, porKg ? -0.5 : -1)} disabled={n === 0}
+                      aria-label={porKg ? `Tirar meio quilo de ${p.nome}` : `Tirar 1 ${u} de ${p.nome}`}>−</button>
+                    <input inputMode={porKg ? 'decimal' : 'numeric'} value={qtd[p.id] ?? '0'} aria-label={porKg ? `Quilos de ${p.nome}` : `Quantidade de ${p.nome}`}
                       onFocus={(e) => e.target.select()}
                       onBlur={() => setQtd((q) => ({ ...q, [p.id]: numeroKg(Math.min(500, Math.round(kgDe(p.id) * 100) / 100)) }))}
-                      onChange={(e) => setQtd((q) => ({ ...q, [p.id]: e.target.value.replace(/[^\d.,]/g, '').replace(/([.,].*)[.,]/, '$1').slice(0, 6) }))} />
-                    <span className="contador-qtd__kg" aria-hidden="true">kg</span>
-                    <button type="button" onClick={() => somar(p.id, 0.5)} disabled={n >= 500} aria-label={`Mais meio quilo de ${p.nome}`}>+</button>
+                      onChange={(e) => setQtd((q) => ({ ...q, [p.id]: limpar(p, e.target.value) }))} />
+                    <span className="contador-qtd__kg" aria-hidden="true">{porKg ? 'kg' : n === 1 ? u : pluralUnidade(u)}</span>
+                    <button type="button" onClick={() => somar(p, porKg ? 0.5 : 1)} disabled={n >= 500}
+                      aria-label={porKg ? `Mais meio quilo de ${p.nome}` : `Mais 1 ${u} de ${p.nome}`}>+</button>
                   </span>
                   {n > 0 && (
                     <label className="escolha-itens__preco">
-                      <span>Preço do kg</span>
+                      <span>{porKg ? 'Preço do kg' : `Preço ${porUnidade(u)}`}</span>
                       <span className="campo-dinheiro">R$
                         <input inputMode="decimal" value={precos[p.id] ?? ''} aria-label={`Preço de ${p.nome}`}
                           onChange={(e) => setPrecos((x) => ({ ...x, [p.id]: e.target.value }))} />
@@ -155,7 +166,7 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
             })}
           </ul>
           <div className="itens__total">
-            <span>{kg(totalKg)}</span>
+            <span>{resumo}</span>
             <strong>{reais(total)}</strong>
           </div>
           {esgotadas.length > 0 && (

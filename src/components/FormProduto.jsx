@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { salvarProduto } from '../lib/dados'
 import { enviarFoto } from '../lib/supabase'
-import { fotosDoSite, slugDe } from '../lib/formato'
+import { fotosDoSite, pluralUnidade, reais, slugDe } from '../lib/formato'
 import { FotosVariedade } from './FotosVariedade'
 
 // Prévia de uma foto escolhida no computador (antes de enviar).
@@ -21,6 +21,9 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
   const [f, setF] = useState(() => ({
     nome: produto?.nome ?? '',
     nome_cartao: produto?.nome_cartao ?? '',
+    venda: produto?.venda ?? 'kg',
+    unidade_nome: produto?.unidade_nome ?? '',
+    secao: produto?.secao ?? 'frutas',
     descricao: produto?.descricao ?? '',
     beneficio: produto?.beneficio ?? '',
     preco: produto ? String(produto.preco_unidade).replace('.', ',') : '',
@@ -48,6 +51,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
     if (f.nome.trim().length < 2) return setErro('Escreva o nome da variedade.')
     if (novo && slugsUsados.includes(slug)) return setErro('Já existe uma variedade com esse nome.')
     if (!f.preco.trim() || Number.isNaN(preco) || preco < 0) return setErro('Escreva um preço válido, por exemplo 10,00.')
+    if (f.venda === 'unidade' && !/^.{2,20}$/.test(f.unidade_nome.trim())) return setErro('Escreva o nome da unidade, no singular (ex.: muda).')
 
     setSalvando(true)
     try {
@@ -56,6 +60,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
       const salvo = await salvarProduto({
         id: produto?.id, slug, nome: f.nome.trim(), nome_cartao: f.nome_cartao.trim().replace(/\s*\/\s*/g, ' / '), descricao: f.descricao.trim(), beneficio: f.beneficio.trim(),
         preco_unidade: preco, ordem: Number(f.ordem) || 0, disponivel: f.disponivel, ativo: f.ativo, imagem_url, imagem_url_2,
+        venda: f.venda, unidade_nome: f.unidade_nome, secao: f.secao,
       })
       aoSalvar({ ...salvo, preco_unidade: Number(salvo.preco_unidade) }, novo)
     } catch (err) {
@@ -72,6 +77,15 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
   const fotosNoSite = primeira ? [primeira, segunda].filter(Boolean) : doSite
   const nomesCartao = (f.nome_cartao || f.nome).split('/').map((x) => x.trim()).filter(Boolean)
 
+  // Vende por quilo ou por unidade. Num produto novo, a seção do site acompanha (unidade → Mudas),
+  // a não ser que o Julio já tenha escolhido a seção na mão.
+  const [secaoNaMao, setSecaoNaMao] = useState(!novo)
+  const porUnidade = f.venda === 'unidade'
+  const unidade = (f.unidade_nome.trim().toLowerCase() || 'unidade')
+  const escolherVenda = (venda) => setF((x) => ({ ...x, venda, secao: secaoNaMao ? x.secao : venda === 'unidade' ? 'mudas' : 'frutas' }))
+  const escolherSecao = (secao) => { setSecaoNaMao(true); setF((x) => ({ ...x, secao })) }
+  const precoExemplo = Number(f.preco.replace(/\./g, '').replace(',', '.')) || 0
+
   return (
     <form className="painel-form form" onSubmit={aoEnviar} noValidate>
       <h2 className="painel-form__titulo">{novo ? 'Nova variedade' : `Editar ${produto.nome}`}</h2>
@@ -85,8 +99,34 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
         <span className="apoio">Para juntar variedades parecidas num cartão só, separe os nomes com /. Em branco, o cartão usa o nome.</span>
       </label>
 
+      <div className="campo-rotulo">
+        <span>Vende por</span>
+        <div className="segmentos segmentos--largo" role="group" aria-label="Vende por">
+          <button type="button" className="segmento" aria-pressed={!porUnidade} onClick={() => escolherVenda('kg')}>Quilo (kg)</button>
+          <button type="button" className="segmento" aria-pressed={porUnidade} onClick={() => escolherVenda('unidade')}>Unidade</button>
+        </div>
+        {!novo && f.venda !== (produto.venda ?? 'kg') && (
+          <span className="apoio">As reservas que já existem continuam na unidade em que foram feitas.</span>
+        )}
+      </div>
+      {porUnidade && (
+        <label className="campo-rotulo">Nome da unidade, no singular
+          <input className="campo" value={f.unidade_nome} onChange={mudar('unidade_nome')} maxLength={20} placeholder="Ex.: muda" />
+          <span className="apoio">
+            No site: “{reais(precoExemplo)} por {unidade}” e “3 {pluralUnidade(unidade)}”. O cliente escolhe de 1 em 1 (só número inteiro).
+          </span>
+        </label>
+      )}
+      <div className="campo-rotulo">
+        <span>Aparece no site em</span>
+        <div className="segmentos segmentos--largo" role="group" aria-label="Seção do site">
+          <button type="button" className="segmento" aria-pressed={f.secao === 'frutas'} onClick={() => escolherSecao('frutas')}>Pitayas</button>
+          <button type="button" className="segmento" aria-pressed={f.secao === 'mudas'} onClick={() => escolherSecao('mudas')}>Mudas</button>
+        </div>
+      </div>
+
       <div className="duas-colunas">
-        <label className="campo-rotulo">Preço do quilo (R$/kg)
+        <label className="campo-rotulo">{porUnidade ? `Preço por ${unidade} (R$)` : 'Preço do quilo (R$/kg)'}
           <input className="campo" inputMode="decimal" value={f.preco} onChange={mudar('preco')} placeholder="10,00" />
         </label>
         <label className="campo-rotulo">Posição no site

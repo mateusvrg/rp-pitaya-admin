@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { STATUS, atualizarVarias, nomeStatus } from '../lib/dados'
 import { exportarReservas } from '../lib/importar'
-import { kg, quilos, reais } from '../lib/formato'
+import { reais, resumoReservas } from '../lib/formato'
 import { IconeEnviar, IconeFechar, IconeVoltar } from './Icones'
 
 // Painel lateral que aparece no lugar do detalhe quando há reservas marcadas na lista.
@@ -13,7 +13,6 @@ export function AcoesEmMassa({ reservas, produtos, aoDesmarcar, aoLimpar, aoVolt
   useEffect(() => { setConfirmar(null); setErro(null) }, [reservas.length])
 
   const qtd = reservas.length
-  const totalKg = reservas.reduce((s, r) => s + quilos(r), 0)
   const valor = reservas.reduce((s, r) => s + r.total_estimado, 0)
   const porStatus = STATUS.map((s) => ({ ...s, qtd: reservas.filter((r) => r.status === s.id).length })).filter((s) => s.qtd > 0)
   const status = confirmar && STATUS.find((s) => s.id === confirmar)
@@ -38,7 +37,7 @@ export function AcoesEmMassa({ reservas, produtos, aoDesmarcar, aoLimpar, aoVolt
         <button type="button" className="botao-fantasma detalhe__voltar" onClick={aoVoltar} aria-label="Voltar para a lista"><IconeVoltar /></button>
         <div className="detalhe__titulo">
           <h2>{qtd} {qtd === 1 ? 'reserva selecionada' : 'reservas selecionadas'}</h2>
-          <p>{kg(totalKg)} · {reais(valor)}</p>
+          <p>{resumoReservas(reservas)} · {reais(valor)}</p>
         </div>
         <button type="button" className="botao-fantasma detalhe__fechar" onClick={aoLimpar} aria-label="Limpar seleção"><IconeFechar /></button>
       </div>

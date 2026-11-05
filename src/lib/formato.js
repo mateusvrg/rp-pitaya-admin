@@ -14,13 +14,42 @@ export const semAcento = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLow
 export const slugDe = (t) =>
   semAcento(t).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
-// Tudo é vendido por quilo: quantidade = kg (pode ter vírgula, ex.: 1,5 kg).
+// Cada produto é vendido por quilo (kg, pode ter vírgula: 1,5 kg) ou por unidade (ex.: muda, número inteiro).
+// Cada item de reserva guarda a sua unidade ('kg' ou o nome, ex.: 'muda').
 export const numeroKg = (n) => Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 export const kg = (n) => `${numeroKg(n)} kg`
 
-export const quilos = (r) => Math.round(r.itens.reduce((s, i) => s + i.quantidade, 0) * 100) / 100
+// Plural do nome da unidade (só a 1ª palavra: "caixa de 2 kg" → "caixas de 2 kg").
+export function pluralUnidade(nome) {
+  const [primeira, ...resto] = String(nome || 'unidade').split(' ')
+  const p = /ão$/.test(primeira) ? primeira.replace(/ão$/, 'ões')
+    : /[rzs]$/.test(primeira) ? `${primeira}es`
+    : /m$/.test(primeira) ? primeira.replace(/m$/, 'ns')
+    : /[aeo]l$/.test(primeira) ? primeira.replace(/l$/, 'is')
+    : `${primeira}s`
+  return [p, ...resto].join(' ')
+}
+// Unidade de um produto: 'kg' ou o nome (singular, minúsculo).
+export const unidadeDe = (p) => (p?.venda === 'unidade' ? (p.unidade_nome || 'unidade').trim().toLowerCase() : 'kg')
+// "2,5 kg", "1 muda", "3 mudas".
+export const qtd = (n, unidade = 'kg') => (unidade === 'kg' ? kg(n) : `${numeroKg(n)} ${Number(n) === 1 ? unidade : pluralUnidade(unidade)}`)
+// Depois do preço: "o kg" ou "por muda".
+export const porUnidade = (unidade = 'kg') => (unidade === 'kg' ? 'o kg' : `por ${unidade}`)
 
-export const resumoItens = (r) => r.itens.map((i) => `${kg(i.quantidade)} ${i.nome}`).join(', ')
+// Só os quilos (os itens por unidade ficam de fora).
+export const quilos = (r) => Math.round(r.itens.reduce((s, i) => s + (i.unidade === 'kg' ? i.quantidade : 0), 0) * 100) / 100
+
+// Soma por unidade: itens [{ quantidade, unidade }] → "15,5 kg e 3 mudas".
+export function resumoQtd(itens) {
+  const soma = new Map()
+  itens.forEach((i) => soma.set(i.unidade || 'kg', Math.round(((soma.get(i.unidade || 'kg') ?? 0) + Number(i.quantidade)) * 100) / 100))
+  const partes = [...soma.entries()].sort(([a], [b]) => (a === 'kg' ? -1 : b === 'kg' ? 1 : 0)).map(([u, n]) => qtd(n, u))
+  if (partes.length <= 1) return partes[0] ?? '0 kg'
+  return `${partes.slice(0, -1).join(', ')} e ${partes[partes.length - 1]}`
+}
+export const resumoReservas = (reservas) => resumoQtd(reservas.flatMap((r) => r.itens))
+
+export const resumoItens = (r) => r.itens.map((i) => `${qtd(i.quantidade, i.unidade)} ${i.nome}`).join(', ')
 
 // Mensagem pronta para abrir a conversa com o cliente no WhatsApp.
 export function linkWhatsApp(r) {

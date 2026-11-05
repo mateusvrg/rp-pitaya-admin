@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CANAIS, STATUS, canalDe } from '../lib/dados'
-import { kg, numeroKg, quilos, reais } from '../lib/formato'
+import { kg, numeroKg, qtd, quilos, reais, resumoQtd, resumoReservas, unidadeDe } from '../lib/formato'
 import { PERIODOS, lerPeriodo, montarPeriodo, salvarPeriodo } from '../lib/periodos'
 import { GraficoLinha } from './GraficoLinha'
 import { GraficoColunas } from './GraficoColunas'
@@ -41,7 +41,7 @@ function BarrasHorizontais({ linhas, formatar = (v) => v, aoClicar }) {
             <span className="barras__trilho">
               <span className="barras__barra" style={{ width: l.valor ? `max(6px, ${(l.valor / maximo) * 100}%)` : 0, ...(l.cor ? { background: l.cor } : {}) }} />
             </span>
-            <span className="barras__valor">{formatar(l.valor)}</span>
+            <span className="barras__valor">{formatar(l.valor, l)}</span>
           </>
         )
         return (
@@ -141,15 +141,24 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
     })
     const porModo = [['entrega', 'Entrega', '#2563EB'], ['retirada', 'Retirada', '#D97706']].map(([id, nome, cor]) => {
       const l = val.filter((r) => r.modo === id)
-      return { id, nome, cor, valor: l.length, extra: kg(l.reduce((s, r) => s + quilos(r), 0)) }
+      return { id, nome, cor, valor: l.length, extra: resumoReservas(l) }
     })
 
-    const unidadesPor = new Map()
-    validas(doPeriodo).forEach((r) => r.itens.forEach((it) => unidadesPor.set(it.nome, (unidadesPor.get(it.nome) ?? 0) + it.quantidade)))
-    const porVariedade = [
-      ...produtos.map((p) => ({ nome: p.nome, valor: unidadesPor.get(p.nome) ?? 0 })),
-      ...[...unidadesPor].filter(([n]) => !produtos.some((p) => p.nome === n)).map(([nome, valor]) => ({ nome, valor })),
+    // Por variedade, separando quilos (pitayas) e unidades (mudas): não dá para somar kg com mudas.
+    const somaPor = new Map()
+    validas(doPeriodo).forEach((r) => r.itens.forEach((it) => {
+      const chave = `${it.nome}|${it.unidade}`
+      somaPor.set(chave, Math.round(((somaPor.get(chave) ?? 0) + it.quantidade) * 100) / 100)
+    }))
+    const linhasVar = [
+      ...produtos.map((p) => ({ nome: p.nome, unidade: unidadeDe(p), valor: somaPor.get(`${p.nome}|${unidadeDe(p)}`) ?? 0 })),
+      ...[...somaPor].filter(([c]) => !produtos.some((p) => `${p.nome}|${unidadeDe(p)}` === c))
+        .map(([c, valor]) => { const [nome, unidade] = c.split('|'); return { nome: unidade === 'kg' ? nome : `${nome} (${unidade})`, unidade, valor } }),
     ].sort((a, b) => b.valor - a.valor)
+    const porVariedade = linhasVar.filter((l) => l.unidade === 'kg')
+    const porUnidadeVar = linhasVar.filter((l) => l.unidade !== 'kg')
+    const outrasUnidades = resumoQtd(validas(doPeriodo).flatMap((r) => r.itens.filter((i) => i.unidade !== 'kg')))
+    const temUnidades = validas(doPeriodo).some((r) => r.itens.some((i) => i.unidade !== 'kg'))
 
     const atualValidas = validas(doPeriodo).length
     const antValidas = validas(doAnterior).length
@@ -172,6 +181,8 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
       qtdPagas: pagas(doPeriodo).length,
       porStatus: STATUS.map((s) => ({ id: s.id, nome: s.plural, cor: `var(--st-${s.id})`, valor: doPeriodo.filter((r) => r.status === s.id).length })),
       porVariedade,
+      porUnidadeVar,
+      outrasUnidades: temUnidades ? outrasUnidades : null,
       porCanal,
       porModo,
       ticket,
@@ -226,7 +237,8 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
 
       <section className="metricas" aria-label={`Resumo: ${dados.periodo.nome}`}>
         <Metrica rotulo="Reservas" valor={dados.totalValidas} detalhe={dados.variacaoReservas} tendencia={dados.tendReservas} />
-        <Metrica rotulo="Quilos reservados" valor={numeroKg(dados.quilos)} detalhe="kg, sem as canceladas" />
+        <Metrica rotulo="Quilos reservados" valor={numeroKg(dados.quilos)}
+          detalhe={dados.outrasUnidades ? `kg, sem as canceladas · mais ${dados.outrasUnidades}` : 'kg, sem as canceladas'} />
         <Metrica rotulo="Valor reservado" valor={reais(dados.valorReservado)} detalhe={dados.variacaoValor} tendencia={dados.tendValor} />
         <Metrica rotulo="Valor pago" valor={reais(dados.valorPago)} detalhe={`${dados.qtdPagas} ${dados.qtdPagas === 1 ? 'reserva paga ou entregue' : 'reservas pagas ou entregues'}`} />
         <Metrica rotulo="Ticket médio" valor={reais(dados.ticket)} detalhe={dados.variacaoTicket ?? 'por reserva, sem as canceladas'} tendencia={dados.tendTicket} />
@@ -280,6 +292,16 @@ const curta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-d
             ? <p className="apoio vazio-grafico">Nenhuma pitaya reservada neste período.</p>
             : <BarrasHorizontais linhas={dados.porVariedade} formatar={(v) => kg(v)} />}
         </section>
+        {/* Mudas e outros vendidos por unidade: só aparece quando existe algum. */}
+        {dados.porUnidadeVar.length > 0 && (
+          <section className="bloco-grafico">
+            <h2>Mudas e outros por unidade</h2>
+            <p className="apoio">Unidades no período, sem as canceladas.</p>
+            {dados.porUnidadeVar.every((v) => v.valor === 0)
+              ? <p className="apoio vazio-grafico">Nada reservado por unidade neste período.</p>
+              : <BarrasHorizontais linhas={dados.porUnidadeVar} formatar={(v, l) => qtd(v, l.unidade)} />}
+          </section>
+        )}
       </div>
     </div>
   )
