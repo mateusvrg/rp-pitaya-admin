@@ -14,32 +14,22 @@ export const semAcento = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLow
 export const slugDe = (t) =>
   semAcento(t).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
-// Cada produto é vendido por quilo (kg, pode ter vírgula: 1,5 kg) ou por unidade (ex.: muda, número inteiro).
-// Cada item de reserva guarda a sua unidade ('kg' ou o nome, ex.: 'muda').
+// Cada produto é vendido por quilo (kg, pode ter vírgula: 1,5 kg) ou por unidade (número inteiro).
+// Cada item de reserva guarda a sua unidade ('kg' ou 'unidade').
 export const numeroKg = (n) => Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 export const kg = (n) => `${numeroKg(n)} kg`
 
-// Plural do nome da unidade (só a 1ª palavra: "caixa de 2 kg" → "caixas de 2 kg").
-export function pluralUnidade(nome) {
-  const [primeira, ...resto] = String(nome || 'unidade').split(' ')
-  const p = /ão$/.test(primeira) ? primeira.replace(/ão$/, 'ões')
-    : /[rzs]$/.test(primeira) ? `${primeira}es`
-    : /m$/.test(primeira) ? primeira.replace(/m$/, 'ns')
-    : /[aeo]l$/.test(primeira) ? primeira.replace(/l$/, 'is')
-    : `${primeira}s`
-  return [p, ...resto].join(' ')
-}
-// Unidade de um produto: 'kg' ou o nome (singular, minúsculo).
-export const unidadeDe = (p) => (p?.venda === 'unidade' ? (p.unidade_nome || 'unidade').trim().toLowerCase() : 'kg')
-// "2,5 kg", "1 muda", "3 mudas".
-export const qtd = (n, unidade = 'kg') => (unidade === 'kg' ? kg(n) : `${numeroKg(n)} ${Number(n) === 1 ? unidade : pluralUnidade(unidade)}`)
-// Depois do preço: "o kg" ou "por muda".
-export const porUnidade = (unidade = 'kg') => (unidade === 'kg' ? 'o kg' : `por ${unidade}`)
+// Unidade de um produto: 'kg' ou 'unidade'.
+export const unidadeDe = (p) => (p?.venda === 'unidade' ? 'unidade' : 'kg')
+// "2,5 kg", "1 unidade", "3 unidades".
+export const qtd = (n, unidade = 'kg') => (unidade === 'kg' ? kg(n) : `${numeroKg(n)} ${Number(n) === 1 ? 'unidade' : 'unidades'}`)
+// Depois do preço: "o kg" ou "a unidade".
+export const porUnidade = (unidade = 'kg') => (unidade === 'kg' ? 'o kg' : 'a unidade')
 
 // Só os quilos (os itens por unidade ficam de fora).
 export const quilos = (r) => Math.round(r.itens.reduce((s, i) => s + (i.unidade === 'kg' ? i.quantidade : 0), 0) * 100) / 100
 
-// Soma por unidade: itens [{ quantidade, unidade }] → "15,5 kg e 3 mudas".
+// Soma por unidade: itens [{ quantidade, unidade }] → "15,5 kg e 3 unidades".
 export function resumoQtd(itens) {
   const soma = new Map()
   itens.forEach((i) => soma.set(i.unidade || 'kg', Math.round(((soma.get(i.unidade || 'kg') ?? 0) + Number(i.quantidade)) * 100) / 100))

@@ -53,10 +53,9 @@ export async function salvarProduto(produto) {
     nome: produto.nome,
     nome_cartao: produto.nome_cartao || null,
     venda: produto.venda === 'unidade' ? 'unidade' : 'kg',
-    unidade_nome: produto.venda === 'unidade' ? (produto.unidade_nome || '').trim().toLowerCase() || null : null,
     secao: produto.secao === 'mudas' ? 'mudas' : 'frutas',
     descricao: produto.descricao,
-    beneficio: produto.beneficio,
+    beneficio: produto.beneficio ?? '', // não é mais usado: o texto todo vai na descrição
     imagem_url: produto.imagem_url || null,
     imagem_url_2: produto.imagem_url ? produto.imagem_url_2 || null : null,
     preco_unidade: produto.preco_unidade,

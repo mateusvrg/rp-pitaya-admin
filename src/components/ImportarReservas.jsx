@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { CANAIS, STATUS, lancarReservas, nomeCanal, nomeStatus } from '../lib/dados'
 import { lerPlanilha } from '../lib/planilha'
 import { baixarModelo, interpretar, marcarRepetidas, paraBanco, validarLinha } from '../lib/importar'
-import { pluralUnidade, qtd, reais, resumoQtd, semAcento, telefone, unidadeDe } from '../lib/formato'
+import { qtd, reais, resumoQtd, semAcento, telefone, unidadeDe } from '../lib/formato'
 import { IconeBaixar, IconeFechar, IconeVoltar, IconeEditar } from './Icones'
 
 const dataCurta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
@@ -257,7 +257,7 @@ function CorrigirLinha({ reserva: r, produtos, aoSalvar, aoCancelar, aoTirar }) 
           <div key={p.id} className="corrigir__item">
             <span>{p.nome}</span>
             <input className={classe(`qtd-${p.id}`)} value={b.qtd[p.id] ?? ''} onChange={mudarDe('qtd', p.id)} inputMode={unidadeDe(p) === 'kg' ? 'decimal' : 'numeric'}
-              placeholder={unidadeDe(p) === 'kg' ? '0 kg' : `0 ${pluralUnidade(unidadeDe(p))}`} aria-label={`Quantidade de ${p.nome}`} />
+              placeholder={unidadeDe(p) === 'kg' ? '0 kg' : '0 un.'} aria-label={`Quantidade de ${p.nome}`} />
             <input className={classe(`preco-${p.id}`)} value={b.preco[p.id] ?? ''} onChange={mudarDe('preco', p.id)} inputMode="decimal"
               placeholder={reais(p.preco_unidade).replace('R$ ', '')} aria-label={`Preço de ${p.nome}`} />
           </div>

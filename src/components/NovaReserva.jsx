@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { STATUS, lancarReservas } from '../lib/dados'
-import { fotosDe, numeroKg, pluralUnidade, porUnidade, reais, resumoQtd, unidadeDe } from '../lib/formato'
+import { fotosDe, numeroKg, porUnidade, reais, resumoQtd, unidadeDe } from '../lib/formato'
 import { FotosVariedade } from './FotosVariedade'
 import { normalizarWhatsApp, lerNumero } from '../lib/importar'
 import { IconeFechar, IconeVoltar, IconeWhatsApp, IconeInstagram } from './Icones'
@@ -142,18 +142,18 @@ export function NovaReserva({ produtos, aoCancelar, aoLancar }) {
                   </span>
                   <span className="contador-qtd">
                     <button type="button" onClick={() => somar(p, porKg ? -0.5 : -1)} disabled={n === 0}
-                      aria-label={porKg ? `Tirar meio quilo de ${p.nome}` : `Tirar 1 ${u} de ${p.nome}`}>−</button>
+                      aria-label={porKg ? `Tirar meio quilo de ${p.nome}` : `Tirar 1 unidade de ${p.nome}`}>−</button>
                     <input inputMode={porKg ? 'decimal' : 'numeric'} value={qtd[p.id] ?? '0'} aria-label={porKg ? `Quilos de ${p.nome}` : `Quantidade de ${p.nome}`}
                       onFocus={(e) => e.target.select()}
                       onBlur={() => setQtd((q) => ({ ...q, [p.id]: numeroKg(Math.min(500, Math.round(kgDe(p.id) * 100) / 100)) }))}
                       onChange={(e) => setQtd((q) => ({ ...q, [p.id]: limpar(p, e.target.value) }))} />
-                    <span className="contador-qtd__kg" aria-hidden="true">{porKg ? 'kg' : n === 1 ? u : pluralUnidade(u)}</span>
+                    <span className="contador-qtd__kg" aria-hidden="true">{porKg ? 'kg' : 'un.'}</span>
                     <button type="button" onClick={() => somar(p, porKg ? 0.5 : 1)} disabled={n >= 500}
-                      aria-label={porKg ? `Mais meio quilo de ${p.nome}` : `Mais 1 ${u} de ${p.nome}`}>+</button>
+                      aria-label={porKg ? `Mais meio quilo de ${p.nome}` : `Mais 1 unidade de ${p.nome}`}>+</button>
                   </span>
                   {n > 0 && (
                     <label className="escolha-itens__preco">
-                      <span>{porKg ? 'Preço do kg' : `Preço ${porUnidade(u)}`}</span>
+                      <span>{porKg ? 'Preço do kg' : 'Preço da unidade'}</span>
                       <span className="campo-dinheiro">R$
                         <input inputMode="decimal" value={precos[p.id] ?? ''} aria-label={`Preço de ${p.nome}`}
                           onChange={(e) => setPrecos((x) => ({ ...x, [p.id]: e.target.value }))} />

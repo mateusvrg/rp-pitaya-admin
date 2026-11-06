@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { salvarProduto } from '../lib/dados'
 import { enviarFoto } from '../lib/supabase'
-import { fotosDoSite, pluralUnidade, reais, slugDe } from '../lib/formato'
+import { fotosDoSite, reais, slugDe } from '../lib/formato'
 import { FotosVariedade } from './FotosVariedade'
 
 // Prévia de uma foto escolhida no computador (antes de enviar).
@@ -22,10 +22,9 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
     nome: produto?.nome ?? '',
     nome_cartao: produto?.nome_cartao ?? '',
     venda: produto?.venda ?? 'kg',
-    unidade_nome: produto?.unidade_nome ?? '',
     secao: produto?.secao ?? 'frutas',
-    descricao: produto?.descricao ?? '',
-    beneficio: produto?.beneficio ?? '',
+    // Descrição e benefício agora são um texto só (o benefício antigo entra no fim da descrição).
+    descricao: [produto?.descricao, produto?.beneficio].map((t) => (t ?? '').trim()).filter(Boolean).join(' '),
     preco: produto ? String(produto.preco_unidade).replace('.', ',') : '',
     ordem: produto?.ordem ?? proximaOrdem,
     disponivel: produto?.disponivel ?? true,
@@ -51,16 +50,15 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
     if (f.nome.trim().length < 2) return setErro('Escreva o nome da variedade.')
     if (novo && slugsUsados.includes(slug)) return setErro('Já existe uma variedade com esse nome.')
     if (!f.preco.trim() || Number.isNaN(preco) || preco < 0) return setErro('Escreva um preço válido, por exemplo 10,00.')
-    if (f.venda === 'unidade' && !/^.{2,20}$/.test(f.unidade_nome.trim())) return setErro('Escreva o nome da unidade, no singular (ex.: muda).')
 
     setSalvando(true)
     try {
       const imagem_url = foto ? await enviarFoto(foto, slug) : f.imagem_url
       const imagem_url_2 = foto2 ? await enviarFoto(foto2, `${slug}-2`) : f.imagem_url_2
       const salvo = await salvarProduto({
-        id: produto?.id, slug, nome: f.nome.trim(), nome_cartao: f.nome_cartao.trim().replace(/\s*\/\s*/g, ' / '), descricao: f.descricao.trim(), beneficio: f.beneficio.trim(),
+        id: produto?.id, slug, nome: f.nome.trim(), nome_cartao: f.nome_cartao.trim().replace(/\s*\/\s*/g, ' / '), descricao: f.descricao.trim().replace(/\s+/g, ' '), beneficio: '',
         preco_unidade: preco, ordem: Number(f.ordem) || 0, disponivel: f.disponivel, ativo: f.ativo, imagem_url, imagem_url_2,
-        venda: f.venda, unidade_nome: f.unidade_nome, secao: f.secao,
+        venda: f.venda, secao: f.secao,
       })
       aoSalvar({ ...salvo, preco_unidade: Number(salvo.preco_unidade) }, novo)
     } catch (err) {
@@ -81,7 +79,6 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
   // a não ser que o Julio já tenha escolhido a seção na mão.
   const [secaoNaMao, setSecaoNaMao] = useState(!novo)
   const porUnidade = f.venda === 'unidade'
-  const unidade = (f.unidade_nome.trim().toLowerCase() || 'unidade')
   const escolherVenda = (venda) => setF((x) => ({ ...x, venda, secao: secaoNaMao ? x.secao : venda === 'unidade' ? 'mudas' : 'frutas' }))
   const escolherSecao = (secao) => { setSecaoNaMao(true); setF((x) => ({ ...x, secao })) }
   const precoExemplo = Number(f.preco.replace(/\./g, '').replace(',', '.')) || 0
@@ -108,15 +105,12 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
         {!novo && f.venda !== (produto.venda ?? 'kg') && (
           <span className="apoio">As reservas que já existem continuam na unidade em que foram feitas.</span>
         )}
+        <span className="apoio">
+          {porUnidade
+            ? `No site: “${reais(precoExemplo)} a unidade”. O cliente escolhe de 1 em 1 (só número inteiro).`
+            : `No site: “${reais(precoExemplo)} o kg”. O cliente escolhe de meio em meio quilo ou digita (ex.: 2,3).`}
+        </span>
       </div>
-      {porUnidade && (
-        <label className="campo-rotulo">Nome da unidade, no singular
-          <input className="campo" value={f.unidade_nome} onChange={mudar('unidade_nome')} maxLength={20} placeholder="Ex.: muda" />
-          <span className="apoio">
-            No site: “{reais(precoExemplo)} por {unidade}” e “3 {pluralUnidade(unidade)}”. O cliente escolhe de 1 em 1 (só número inteiro).
-          </span>
-        </label>
-      )}
       <div className="campo-rotulo">
         <span>Aparece no site em</span>
         <div className="segmentos segmentos--largo" role="group" aria-label="Seção do site">
@@ -126,7 +120,7 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
       </div>
 
       <div className="duas-colunas">
-        <label className="campo-rotulo">{porUnidade ? `Preço por ${unidade} (R$)` : 'Preço do quilo (R$/kg)'}
+        <label className="campo-rotulo">{porUnidade ? 'Preço da unidade (R$)' : 'Preço do quilo (R$/kg)'}
           <input className="campo" inputMode="decimal" value={f.preco} onChange={mudar('preco')} placeholder="10,00" />
         </label>
         <label className="campo-rotulo">Posição no site
@@ -134,11 +128,10 @@ export function FormProduto({ produto, proximaOrdem, slugsUsados, aoCancelar, ao
         </label>
       </div>
 
-      <label className="campo-rotulo">Descrição curta
-        <input className="campo" value={f.descricao} onChange={mudar('descricao')} maxLength={200} placeholder="Ex.: Polpa vermelha intensa." />
-      </label>
-      <label className="campo-rotulo">Benefício
-        <input className="campo" value={f.beneficio} onChange={mudar('beneficio')} maxLength={200} placeholder="Ex.: Rica em vitamina C." />
+      <label className="campo-rotulo">Descrição
+        <textarea className="campo" rows="3" value={f.descricao} onChange={mudar('descricao')} maxLength={400}
+          placeholder="Ex.: Polpa vermelha intensa e doce. Rica em vitamina C." />
+        <span className="apoio">É o texto que aparece no cartão do site. {f.descricao.length}/400</span>
       </label>
 
       <div className="campo-rotulo">

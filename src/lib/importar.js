@@ -1,9 +1,9 @@
 // Transforma as linhas da planilha em reservas, conferindo cada uma antes de mandar para o banco.
 import { STATUS, canalDe, nomeCanal } from './dados'
 import { gerarXlsx, baixarArquivo } from './planilha'
-import { pluralUnidade, semAcento, telefone, unidadeDe } from './formato'
-// Coluna da quantidade: "kg" ou o plural da unidade ("mudas").
-const rotuloQtd = (p) => (unidadeDe(p) === 'kg' ? 'kg' : pluralUnidade(unidadeDe(p)))
+import { semAcento, telefone, unidadeDe } from './formato'
+// Coluna da quantidade: "kg" ou "unidades".
+const rotuloQtd = (p) => (unidadeDe(p) === 'kg' ? 'kg' : 'unidades')
 
 const chave = (t) => semAcento(String(t ?? '')).replace(/[^a-z0-9]+/g, ' ').trim()
 
@@ -125,7 +125,7 @@ export function validarLinha(b, produtos) {
     if (q == null || q === 0) return
     const u = unidadeDe(p)
     if (u === 'kg' && (Number.isNaN(q) || q < 0.1 || q > 500)) { erro(`qtd-${p.id}`, `quilos de ${p.nome} inválidos (de 0,1 a 500)`); return }
-    if (u !== 'kg' && (Number.isNaN(q) || !Number.isInteger(q) || q < 1 || q > 500)) { erro(`qtd-${p.id}`, `${p.nome}: use um número inteiro de ${pluralUnidade(u)} (de 1 a 500)`); return }
+    if (u !== 'kg' && (Number.isNaN(q) || !Number.isInteger(q) || q < 1 || q > 500)) { erro(`qtd-${p.id}`, `${p.nome}: use um número inteiro de unidades (de 1 a 500)`); return }
     q = Math.round(q * 100) / 100
     let preco = p.preco_unidade
     const pc = lerNumero(t(b.preco?.[p.id]))
@@ -240,7 +240,7 @@ function planilhaReservas(produtos, reservas, nomeArquivo) {
     ['WhatsApp: com DDD, como quiser: (34) 99999-8888 ou 34999998888. Sem DDD, o painel usa 34.'],
     ['Recebimento: Entrega ou Retirada. Em branco = Entrega se tiver endereço, senão Retirada.'],
     ['Endereço: só para entrega. Pode ficar em branco se ainda não combinou.'],
-    [`Colunas das variedades (${vars.map((p) => p.nome).join(', ')}): a quantidade de cada uma. Em kg pode ter vírgula (ex.: 1,5); por unidade (ex.: mudas), só número inteiro. Deixe em branco o que a pessoa não pegou.`],
+    [`Colunas das variedades (${vars.map((p) => p.nome).join(', ')}): a quantidade de cada uma. Em kg pode ter vírgula (ex.: 1,5); por unidade, só número inteiro. Deixe em branco o que a pessoa não pegou.`],
     ['Status: Nova, Em contato, Paga, Entregue ou Cancelada. Em branco = Nova.'],
     ['Canal: por onde a reserva chegou: WhatsApp, Instagram ou Site. Em branco = WhatsApp.'],
     ['Anotações: qualquer observação (ex.: pagou metade no Pix).'],
